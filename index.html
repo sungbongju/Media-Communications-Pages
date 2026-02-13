@@ -1132,7 +1132,7 @@ section {
     <div class="avatar-area" id="avatarArea">
       <iframe
         id="heygen-avatar"
-        src="about:blank"
+        src="https://dementia-prevent-game-bot-sbj.netlify.app/"
         allow="camera; microphone; autoplay; clipboard-write"
         style="width:100%; height:100%; border:none; border-radius:14px; background:#1a1a2e;"
       ></iframe>
@@ -1288,7 +1288,7 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
 
 // ── HeyGen Avatar 연동 ──
 // ✅ TODO: 아래 URL을 실제 Netlify 배포 URL로 교체
-const AVATAR_APP_URL = 'about:blank'; // 예: 'https://micom-avatar-bot.netlify.app/'
+const AVATAR_APP_URL = 'https://dementia-prevent-game-bot-sbj.netlify.app/';
 const avatarIframe = document.getElementById('heygen-avatar');
 const avatarPlaceholder = document.getElementById('avatarPlaceholder');
 const avatarStatus = document.getElementById('avatarStatus');
@@ -1296,20 +1296,11 @@ const chatBubble = document.getElementById('chatBubble');
 
 // 아바타 앱 로드
 function initAvatar() {
-  if (AVATAR_APP_URL === 'about:blank') {
-    console.log('⏳ 아바타 URL 미설정 - 플레이스홀더 유지');
-    return;
-  }
   avatarIframe.src = AVATAR_APP_URL;
   avatarIframe.onload = () => {
     avatarPlaceholder.classList.add('hidden');
     avatarStatus.classList.add('connected');
     avatarStatus.querySelector('.status-text').textContent = '아바타 연결됨';
-    // 아바타 시작 신호
-    avatarIframe.contentWindow.postMessage({
-      type: 'START_AVATAR',
-      context: 'micom_landing'
-    }, '*');
   };
 }
 
@@ -1323,12 +1314,6 @@ document.querySelectorAll('.quick-q').forEach(btn => {
     chatBubble.textContent = '🤔 생각하는 중...';
     btn.style.borderColor = 'var(--mint)';
     setTimeout(() => { btn.style.borderColor = ''; }, 1000);
-
-    if (AVATAR_APP_URL === 'about:blank') {
-      // 아바타 미연결 시 - 챗봇 섹션으로 스크롤만
-      chatBubble.textContent = '아바타가 아직 연결되지 않았습니다. 곧 만나요! 😊';
-      return;
-    }
 
     // 아바타에 질문 전달
     avatarIframe.contentWindow.postMessage({
@@ -1346,7 +1331,7 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
 
     // CTA 버튼 텍스트를 질문으로 전달
     const question = btn.textContent.trim();
-    if (AVATAR_APP_URL !== 'about:blank' && avatarIframe.contentWindow) {
+    if (avatarIframe.contentWindow) {
       setTimeout(() => {
         avatarIframe.contentWindow.postMessage({
           type: 'ASK_QUESTION',
