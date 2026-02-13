@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>미디어커뮤니케이션학 전공 — 랜딩페이지 와이어프레임 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0f1729;
+  --navy-light: #1a2540;
+  --coral: #ff6246;
+  --coral-soft: #ff8a75;
+  --mint: #3dd9b6;
+  --mint-bg: #edf9f5;
+  --cream: #faf8f5;
+  --warm-gray: #6b6b6b;
+  --text-dark: #1a1a1a;
+  --text-light: #e8e8e8;
+  --glass: rgba(255,255,255,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Wireframe bar ── */
+.wf-bar {
+  position: fixed; top:0; left:0; right:0; z-index:1000;
+  background: var(--navy);
+  color: var(--text-light);
+  padding: 8px 16px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wf-bar span { opacity: 0.6; }
+.wf-badge {
+  background: var(--coral);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── Section tags ── */
+.section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+.section-tag.dark { background: var(--glass); color: var(--mint); border: 1px solid rgba(61,217,182,0.3); }
+.section-tag.light { background: rgba(255,98,70,0.08); color: var(--coral); border: 1px solid rgba(255,98,70,0.2); }
+
+/* ── Scroll-snap sections ── */
+section {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 70px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* ── Scroll animations ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(.22,.61,.36,1), transform 0.7s cubic-bezier(.22,.61,.36,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.12s; }
+.reveal-delay-2 { transition-delay: 0.24s; }
+.reveal-delay-3 { transition-delay: 0.36s; }
+.reveal-delay-4 { transition-delay: 0.48s; }
+
+/* ════════════════════════════════
+   S1: HERO
+   ════════════════════════════════ */
+.hero {
+  background: var(--navy);
+  color: var(--text-light);
+  text-align: center;
+  padding: 90px 24px 60px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(61,217,182,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(255,98,70,0.05) 0%, transparent 50%);
+  animation: heroGlow 14s ease-in-out infinite alternate;
+}
+@keyframes heroGlow {
+  0% { transform: translate(0,0) rotate(0deg); }
+  100% { transform: translate(-3%,2%) rotate(2deg); }
+}
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--mint);
+  margin-bottom: 28px;
+  position: relative;
+}
+.hero h1 {
+  font-size: clamp(24px, 7vw, 40px);
+  font-weight: 900;
+  line-height: 1.5;
+  position: relative;
+  margin-bottom: 20px;
+}
+.hero h1 .accent { color: var(--coral); }
+.hero-sub {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.45);
+  max-width: 300px;
+  margin: 0 auto 36px;
+  position: relative;
+}
+.hero-sub .hl { color: var(--mint); }
+.scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 2px;
+  position: relative;
+}
+.scroll-arrow {
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%,100% { opacity:.3; transform:scaleY(1); }
+  50% { opacity:1; transform:scaleY(1.3); }
+}
+
+/* ════════════════════════════════
+   S2: WHY NOW
+   ════════════════════════════════ */
+.why-now {
+  background: var(--cream);
+  padding: 70px 24px 50px;
+}
+.why-now h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.why-now .subtitle {
+  font-size: 13px;
+  color: var(--warm-gray);
+  margin-bottom: 24px;
+}
+.trend-cards {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+  margin: 0 -24px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.trend-cards::-webkit-scrollbar { display: none; }
+.trend-card {
+  min-width: 240px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  scroll-snap-align: start;
+  border: 1px solid rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.trend-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+}
+.trend-card:nth-child(1)::after { background: var(--coral); }
+.trend-card:nth-child(2)::after { background: var(--mint); }
+.trend-card:nth-child(3)::after { background: var(--navy); }
+.trend-card .card-icon { font-size: 24px; margin-bottom: 12px; }
+.trend-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.trend-card .stat {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--coral);
+  margin-bottom: 2px;
+  font-family: 'Playfair Display', serif;
+}
+.trend-card p { font-size: 12px; color: var(--warm-gray); line-height: 1.6; }
+.trend-card .info-gap { font-size: 11px; color: #ccc; margin-top: 4px; }
+.swipe-hint {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(0,0,0,0.2);
+  margin-top: 6px;
+}
+
+/* ── CTA Buttons ── */
+.cta-chat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: transform .2s, box-shadow .3s;
+}
+.cta-chat:active { transform: scale(.97); }
+.cta-chat:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,23,41,.2); }
+.pulse-dot {
+  width: 8px; height: 8px;
+  background: var(--mint);
+  border-radius: 50%;
+  animation: ctaPulse 2s ease-in-out infinite;
+}
+@keyframes ctaPulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:.5; transform:scale(1.5); }
+}
+.cta-chat.coral-bg { background: var(--coral); }
+.cta-chat.glass-bg {
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.cta-note {
+  font-size: 10px;
+  color: var(--coral);
+  margin-top: 8px;
+  font-weight: 500;
+  letter-spacing: .3px;
+}
+
+/* ════════════════════════════════
+   S3: IDENTITY
+   ════════════════════════════════ */
+.identity {
+  background: var(--navy);
+  color: var(--text-light);
+  padding: 70px 24px 50px;
+}
+.identity h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+.identity h2 .accent { color: var(--coral); }
+.venn-diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 24px 0;
+  position: relative;
+  height: 160px;
+}
+.venn-circle {
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+  position: absolute;
+}
+.venn-circle.medical {
+  background: rgba(61,217,182,0.12);
+  border: 1.5px solid rgba(61,217,182,0.35);
+  left: calc(50% - 95px);
+  color: var(--mint);
+}
+.venn-circle.media {
+  background: rgba(255,98,70,0.12);
+  border: 1.5px solid rgba(255,98,70,0.35);
+  left: calc(50% - 35px);
+  color: var(--coral-soft);
+}
+.venn-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  bottom: 6px;
+  letter-spacing: .5px;
+}
+.partner-logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+.logo-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55);
+}
+
+/* ════════════════════════════════
+   S4: SHOWCASE
+   ════════════════════════════════ */
+.showcase {
+  background: #fff;
+  padding: 70px 24px 50px;
+}
+.showcase h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.showcase .subtitle {
+  font-size: 13px;
+  color: var(--warm-gray);
+  margin-bottom: 24px;
+}
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.showcase-item {
+  border-radius: 14px;
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: #ddd;
+}
+.showcase-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .5s cubic-bezier(.22,.61,.36,1);
+}
+.showcase-item:active img { transform: scale(1.05); }
+.showcase-item .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15,23,41,0.88) 0%, rgba(15,23,41,0.2) 40%, transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px;
+  transition: opacity .3s;
+}
+.showcase-item .overlay h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.showcase-item .overlay span {
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+}
+.showcase-item.wide {
+  grid-column: span 2;
+  aspect-ratio: 2/1;
+}
+
+/* ════════════════════════════════
+   S5: CURRICULUM
+   ════════════════════════════════ */
+.curriculum {
+  background: var(--mint-bg);
+  padding: 70px 24px 50px;
+}
+.curriculum h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.curriculum .subtitle {
+  font-size: 13px;
+  color: var(--warm-gray);
+  margin-bottom: 28px;
+}
+.timeline {
+  position: relative;
+  padding-left: 28px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--mint), var(--coral));
+  border-radius: 2px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -24px; top: 6px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--mint);
+  background: var(--mint-bg);
+}
+.timeline-item:nth-child(2)::before { border-color: #66d9c2; }
+.timeline-item:nth-child(3)::before { border-color: var(--coral-soft); }
+.timeline-item:nth-child(4)::before { border-color: var(--coral); }
+.timeline-year {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mint);
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.timeline-item:nth-child(3) .timeline-year,
+.timeline-item:nth-child(4) .timeline-year { color: var(--coral); }
+.timeline-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.timeline-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.timeline-keywords span {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.05);
+  color: var(--warm-gray);
+}
+
+/* ════════════════════════════════
+   S6: SOCIAL PROOF — 스와이프 가능
+   ════════════════════════════════ */
+.social-proof {
+  background: #fff;
+  padding: 70px 24px 50px;
+}
+.social-proof h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.social-proof .subtitle {
+  font-size: 13px;
+  color: var(--warm-gray);
+  margin-bottom: 20px;
+}
+/* Tab switcher */
+.voice-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.voice-tab {
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  background: transparent;
+  color: var(--warm-gray);
+  cursor: pointer;
+  transition: all .2s;
+}
+.voice-tab.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+/* Carousel container */
+.carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.testimonial-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+  scroll-behavior: smooth;
+}
+.testimonial-track::-webkit-scrollbar { display: none; }
+.testimonial-card {
+  min-width: calc(100vw - 80px);
+  max-width: 320px;
+  background: var(--cream);
+  border-radius: 16px;
+  padding: 24px 20px;
+  scroll-snap-align: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.testimonial-card .card-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+.card-type.student { background: rgba(61,217,182,0.12); color: #2bb090; }
+.card-type.professor { background: rgba(255,98,70,0.1); color: var(--coral); }
+.card-type.alumni { background: rgba(15,23,41,0.08); color: var(--navy); }
+.testimonial-card .quote-mark {
+  font-size: 40px;
+  font-family: 'Playfair Display', serif;
+  color: var(--coral);
+  line-height: 1;
+  margin-bottom: 8px;
+  opacity: .3;
+}
+.testimonial-card blockquote {
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 14px;
+  color: var(--text-dark);
+}
+.testimonial-card .author {
+  font-size: 12px;
+  color: var(--warm-gray);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.testimonial-card .author strong { color: var(--text-dark); }
+.author-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+/* Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.carousel-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all .3s;
+}
+.carousel-dot.active {
+  background: var(--coral);
+  width: 18px;
+  border-radius: 3px;
+}
+
+/* ════════════════════════════════
+   S7: CHATBOT
+   ════════════════════════════════ */
+.chatbot-section {
+  background: var(--navy);
+  color: var(--text-light);
+  padding: 70px 24px 50px;
+  text-align: center;
+}
+.chatbot-section h2 {
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.chatbot-section .subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 28px;
+}
+.chatbot-mockup {
+  background: var(--navy-light);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 20px 18px;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: left;
+}
+.avatar-area {
+  width: 100%;
+  height: 160px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(61,217,182,0.08), rgba(255,98,70,0.08));
+  border: 1px dashed rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  gap: 6px;
+}
+.avatar-circle {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(61,217,182,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.avatar-area span {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+}
+.chat-bubble {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px 14px 14px 4px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 14px;
+}
+.quick-questions { display: flex; flex-direction: column; gap: 7px; }
+.quick-q {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: left;
+}
+.quick-q:active { background: var(--glass); border-color: var(--mint); color: #fff; }
+.quick-q .q-icon { font-size: 15px; flex-shrink: 0; }
+
+/* ── Footer ── */
+.footer {
+  background: var(--navy);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 32px 24px;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  text-align: center;
+  min-height: auto;
+  line-height: 1.8;
+  scroll-snap-align: end;
+}
+.footer a { color: var(--mint); text-decoration: none; }
+
+/* ── Floating chat ── */
+.floating-chat {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--coral);
+  color: #fff;
+  border: none;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,98,70,0.4);
+  z-index: 900;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all .4s ease;
+}
+.floating-chat.visible { opacity: 1; transform: translateY(0); }
+.floating-chat:active { transform: scale(.92); }
+.notif-dot {
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 12px; height: 12px;
+  background: var(--mint);
+  border-radius: 50%;
+  border: 2px solid var(--cream);
+  animation: ctaPulse 2s ease-in-out infinite;
+}
+
+/* ── Nav dots ── */
+.nav-dots {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.nav-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.18);
+  background: transparent;
+  cursor: pointer;
+  transition: all .3s;
+  padding: 0;
+}
+.nav-dot.active {
+  background: var(--coral);
+  border-color: var(--coral);
+  transform: scale(1.4);
+}
+.nav-dot.on-dark { border-color: rgba(255,255,255,0.25); }
+.nav-dot.on-dark.active { border-color: var(--mint); background: var(--mint); }
+
+/* ── Annotation ── */
+.annotation {
+  background: rgba(255,98,70,0.05);
+  border-left: 3px solid var(--coral);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--coral);
+  line-height: 1.6;
+}
+.annotation.dark {
+  background: rgba(255,98,70,0.06);
+  border-left-color: var(--coral-soft);
+  color: var(--coral-soft);
+}
+.annotation strong { display: block; margin-bottom: 2px; }
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+  section { padding: 90px 48px 60px; }
+  .trend-cards { overflow-x: visible; flex-wrap: wrap; margin:0; padding-left:0; padding-right:0; }
+  .trend-card { min-width: 0; flex: 1; }
+  .showcase-grid { grid-template-columns: repeat(3, 1fr); }
+  .showcase-item.wide { grid-column: span 1; aspect-ratio: 1; }
+  .testimonial-card { min-width: 280px; max-width: 300px; }
+  .chatbot-mockup { max-width: 380px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wf-bar">
+  <span>미디어커뮤니케이션학 전공</span>
+  <span class="wf-badge">WIREFRAME v2</span>
+</div>
+
+<nav class="nav-dots" id="navDots"></nav>
+
+<button class="floating-chat" id="floatingChat" onclick="document.getElementById('chatbot').scrollIntoView({behavior:'smooth'})">
+  💬<span class="notif-dot"></span>
+</button>
+
+<!-- ═══ S1: HERO ═══ -->
+<section class="hero" id="s1" data-dot-dark>
+  <p class="hero-eyebrow reveal">CHA UNIVERSITY</p>
+  <h1 class="reveal reveal-delay-1">
+    병원도, 제약회사도,<br>
+    바이오 스타트업도<br>
+    <span class="accent">콘텐츠를 만들 사람</span>을<br>
+    찾고 있습니다.
+  </h1>
+  <p class="hero-sub reveal reveal-delay-2">
+    그런데 <span class="hl">의료를 이해하는 크리에이터</span>는<br>어디서 키울까요?
+  </p>
+  <div class="scroll-hint reveal reveal-delay-3">
+    <span>SCROLL</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ═══ S2: WHY NOW ═══ -->
+<section class="why-now" id="s2">
+  <div class="section-tag light reveal">WHY NOW</div>
+  <h2 class="reveal">지금, 달라지고 있는 것들</h2>
+  <p class="subtitle reveal reveal-delay-1">숫자가 말해주는 변화</p>
+
+  <div class="trend-cards">
+    <div class="trend-card reveal reveal-delay-1">
+      <div class="card-icon">🏥</div>
+      <h3>병원 홍보팀 채용</h3>
+      <div class="stat" data-count="47">0</div>
+      <p>% 증가 (전년 대비)</p>
+      <p class="info-gap">— 구체적 직무는?</p>
+    </div>
+    <div class="trend-card reveal reveal-delay-2">
+      <div class="card-icon">💊</div>
+      <h3>바이오 기업 IR/PR</h3>
+      <div class="stat" style="color:var(--mint);">NEW</div>
+      <p>"콘텐츠 기획자" 직무 신설 증가</p>
+      <p class="info-gap">— 어떤 기업들?</p>
+    </div>
+    <div class="trend-card reveal reveal-delay-3">
+      <div class="card-icon">🤖</div>
+      <h3>AI가 대체 못하는 것</h3>
+      <div class="stat" style="font-size:24px;color:var(--navy);">"맥락"</div>
+      <p>의료를 아는 스토리텔링은 AI가 대체할 수 없습니다</p>
+      <p class="info-gap">— 왜 그런지?</p>
+    </div>
+  </div>
+  <p class="swipe-hint">← 스와이프 →</p>
+
+  <button class="cta-chat reveal">
+    <span class="pulse-dot"></span>
+    이 변화가 나와 무슨 상관인지 물어보기
+  </button>
+  <div class="cta-note reveal">↑ 첫 번째 챗봇 진입점 — 설명봇</div>
+</section>
+
+<!-- ═══ S3: IDENTITY ═══ -->
+<section class="identity" id="s3" data-dot-dark>
+  <div class="section-tag dark reveal">ONLY ONE</div>
+  <h2 class="reveal">
+    전국에서 <span class="accent">유일하게</span><br>
+    의과학대학 안에 있는<br>
+    미디어 전공
+  </h2>
+
+  <div class="venn-diagram reveal reveal-delay-1">
+    <div class="venn-circle medical">의과학<br>기초</div>
+    <div class="venn-circle media">미디어<br>크리에이티브</div>
+    <div class="venn-center">헬스 커뮤니케이터</div>
+  </div>
+
+  <div class="partner-logos reveal reveal-delay-2">
+    <span class="logo-chip">🏥 차병원</span>
+    <span class="logo-chip">카카오헬스케어</span>
+    <span class="logo-chip">CJ ENM</span>
+    <span class="logo-chip">HYBE</span>
+    <span class="logo-chip">엔자임헬스</span>
+    <span class="logo-chip" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);">+ 더 보기</span>
+  </div>
+
+  <p style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.7;margin-top:12px;" class="reveal reveal-delay-3">
+    졸업생들이 이 곳에서 시작했습니다.<br>
+    <span style="color:rgba(255,255,255,0.2)">— 구체적인 스토리는 아직 비밀</span>
+  </p>
+
+  <button class="cta-chat glass-bg reveal reveal-delay-3">
+    <span class="pulse-dot"></span>
+    어떤 진로가 가능한지 구체적으로 알기
+  </button>
+  <div class="cta-note reveal reveal-delay-3" style="color:var(--coral-soft);">↑ 두 번째 챗봇 진입점 — 설명봇</div>
+</section>
+
+<!-- ═══ S4: SHOWCASE ═══ -->
+<section class="showcase" id="s4">
+  <div class="section-tag light reveal">SHOWCASE</div>
+  <h2 class="reveal">미컴이 만든 세계</h2>
+  <p class="subtitle reveal reveal-delay-1">재학생들의 실제 프로젝트</p>
+
+  <div class="showcase-grid">
+    <div class="showcase-item reveal reveal-delay-1">
+      <img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?w=600&h=600&fit=crop&crop=center" alt="영상제작">
+      <div class="overlay"><h4>디지털 영상 제작</h4><span>숏폼 콘텐츠 실습</span></div>
+    </div>
+    <div class="showcase-item reveal reveal-delay-2">
+      <img src="https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=600&h=600&fit=crop&crop=center" alt="VR">
+      <div class="overlay"><h4>실감미디어 XR</h4><span>VR 콘텐츠 기획</span></div>
+    </div>
+    <div class="showcase-item reveal reveal-delay-2">
+      <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&h=600&fit=crop&crop=center" alt="캠페인 기획">
+      <div class="overlay"><h4>광고 캠페인 기획</h4><span>애드어바웃 소모임</span></div>
+    </div>
+    <div class="showcase-item reveal reveal-delay-3">
+      <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=600&fit=crop&crop=center" alt="헬스케어">
+      <div class="overlay"><h4>헬스 커뮤니케이션</h4><span>의료 콘텐츠 제작</span></div>
+    </div>
+    <div class="showcase-item wide reveal reveal-delay-3">
+      <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&h=600&fit=crop&crop=center" alt="팀프로젝트">
+      <div class="overlay"><h4>CUIF+ 정책 경진대회</h4><span>전설일지도 팀 — 대상 수상 🏆</span></div>
+    </div>
+  </div>
+
+  <button class="cta-chat reveal" style="margin-top:20px;">
+    <span class="pulse-dot"></span>
+    "나도 이런 걸 만들 수 있을까?" 물어보기
+  </button>
+  <div class="cta-note reveal">↑ 세 번째 챗봇 진입점 — 분석봇</div>
+</section>
+
+<!-- ═══ S5: CURRICULUM ═══ -->
+<section class="curriculum" id="s5">
+  <div class="section-tag light reveal">ROADMAP</div>
+  <h2 class="reveal">4년, 이렇게 성장합니다</h2>
+  <p class="subtitle reveal reveal-delay-1">키워드로 보는 로드맵</p>
+
+  <div class="timeline">
+    <div class="timeline-item reveal reveal-delay-1">
+      <div class="timeline-year">1학년</div>
+      <div class="timeline-title">기초 소양 + AI 리터러시</div>
+      <div class="timeline-keywords"><span>커뮤니케이션 입문</span><span>미디어 문해</span><span>AI 기초</span></div>
+    </div>
+    <div class="timeline-item reveal reveal-delay-2">
+      <div class="timeline-year">2학년</div>
+      <div class="timeline-title">전공 기초 + 의과학 입문</div>
+      <div class="timeline-keywords"><span>광고학</span><span>영상제작</span><span>의학용어</span><span>PR</span></div>
+    </div>
+    <div class="timeline-item reveal reveal-delay-3">
+      <div class="timeline-year">3학년</div>
+      <div class="timeline-title">심화 실습 + 산학 프로젝트</div>
+      <div class="timeline-keywords"><span>헬스캠페인</span><span>디지털마케팅</span><span>XR</span><span>인턴십</span></div>
+    </div>
+    <div class="timeline-item reveal reveal-delay-4">
+      <div class="timeline-year">4학년</div>
+      <div class="timeline-title">캡스톤 + 취업 연계</div>
+      <div class="timeline-keywords"><span>졸업 프로젝트</span><span>포트폴리오</span><span>현장실습</span></div>
+    </div>
+  </div>
+
+  <button class="cta-chat coral-bg reveal" style="margin-top:24px;">
+    <span class="pulse-dot" style="background:#fff;"></span>
+    내 관심사에 맞는 과목 조합 추천받기
+  </button>
+  <div class="cta-note reveal">↑ 네 번째 챗봇 진입점 — 분석봇</div>
+</section>
+
+<!-- ═══ S6: SOCIAL PROOF ═══ -->
+<section class="social-proof" id="s6">
+  <div class="section-tag light reveal">VOICES</div>
+  <h2 class="reveal">우리의 이야기</h2>
+  <p class="subtitle reveal reveal-delay-1">선배와 교수님들이 직접 전하는 이야기</p>
+
+  <div class="voice-tabs reveal reveal-delay-1">
+    <button class="voice-tab active" data-filter="all">전체</button>
+    <button class="voice-tab" data-filter="student">재학생</button>
+    <button class="voice-tab" data-filter="professor">교수</button>
+    <button class="voice-tab" data-filter="alumni">졸업생</button>
+  </div>
+
+  <div class="carousel-wrapper reveal reveal-delay-2">
+    <div class="testimonial-track" id="testimonialTrack">
+
+      <!-- 재학생 1 -->
+      <div class="testimonial-card" data-type="student">
+        <div class="card-type student">🎓 재학생</div>
+        <div class="quote-mark">"</div>
+        <blockquote>솔직히 처음엔 2전공으로 왔는데, 직접 만들어보는 수업이 이렇게 많은 줄 몰랐어요. 지금은 1전공 바꿀까 진지하게 고민 중입니다.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👩‍🎓</div>
+          <div><strong>24학번 ○○○</strong><br>2전공 → 1전공 전환 고민 중</div>
+        </div>
+      </div>
+
+      <!-- 교수 1 - 김정환 -->
+      <div class="testimonial-card" data-type="professor">
+        <div class="card-type professor">👨‍🏫 교수</div>
+        <div class="quote-mark">"</div>
+        <blockquote>의료를 이해하면서 콘텐츠를 만들 수 있는 사람, 이게 지금 시장이 필요로 하는 인재상입니다. 우리 전공이 바로 그걸 키우는 곳이에요.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👨‍🏫</div>
+          <div><strong>김정환 교수</strong><br>전공 주임교수 · VR/메타버스 연구</div>
+        </div>
+      </div>
+
+      <!-- 재학생 2 -->
+      <div class="testimonial-card" data-type="student">
+        <div class="card-type student">🎓 재학생</div>
+        <div class="quote-mark">"</div>
+        <blockquote>CUIF+ 정책 경진대회에서 1등 하면서, 우리가 배운 기획력이 실제로 통한다는 걸 느꼈어요. 자신감이 확 생겼습니다.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👩</div>
+          <div><strong>23학번 ○○○</strong><br>CUIF+ 대상 수상</div>
+        </div>
+      </div>
+
+      <!-- 교수 2 - 장정헌 -->
+      <div class="testimonial-card" data-type="professor">
+        <div class="card-type professor">👨‍🏫 교수</div>
+        <div class="quote-mark">"</div>
+        <blockquote>헬스 커뮤니케이션은 앞으로 더 중요해질 분야입니다. 의과학 기반 위에 커뮤니케이션 역량을 쌓으면, 다른 곳에서는 절대 만들 수 없는 경쟁력이 생깁니다.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👨‍🏫</div>
+          <div><strong>장정헌 교수</strong><br>한국PR학회 회장 · 헬스커뮤니케이션</div>
+        </div>
+      </div>
+
+      <!-- 졸업생 1 -->
+      <div class="testimonial-card" data-type="alumni">
+        <div class="card-type alumni">🎒 졸업생</div>
+        <div class="quote-mark">"</div>
+        <blockquote>차병원 홍보팀 인턴할 때 의료를 아는 게 얼마나 큰 무기인지 깨달았어요. 다른 학교 친구들이 부러워했습니다.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👩‍💼</div>
+          <div><strong>22학번 ○○○</strong><br>차병원 홍보팀 인턴 수료</div>
+        </div>
+      </div>
+
+      <!-- 교수 3 - 박진훈 -->
+      <div class="testimonial-card" data-type="professor">
+        <div class="card-type professor">👨‍🏫 교수</div>
+        <div class="quote-mark">"</div>
+        <blockquote>학생들의 실감콘텐츠 제작 역량이 해마다 놀라울 정도로 성장합니다. AI 도구를 활용하면서 표현의 폭이 확 넓어졌어요.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👨‍🏫</div>
+          <div><strong>박진훈 교수</strong><br>글로벌 교육원장 · 디지털콘텐츠</div>
+        </div>
+      </div>
+
+      <!-- 졸업생 2 -->
+      <div class="testimonial-card" data-type="alumni">
+        <div class="card-type alumni">🎒 졸업생</div>
+        <div class="quote-mark">"</div>
+        <blockquote>엔터 업계에서 일하고 있는데, 의과학대학 출신이라는 게 의외로 큰 차별점이 됩니다. 헬스케어 브랜드와 작업할 때 특히요.</blockquote>
+        <div class="author">
+          <div class="author-avatar">👨‍💼</div>
+          <div><strong>20학번 ○○○</strong><br>엔터테인먼트 업계 재직</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+</section>
+
+<!-- ═══ S7: CHATBOT ═══ -->
+<section class="chatbot-section" id="chatbot" data-dot-dark>
+  <div class="section-tag dark reveal">CHAT</div>
+  <h2 class="reveal">궁금한 게 있다면,<br>직접 물어보세요</h2>
+  <p class="subtitle reveal reveal-delay-1">AI 아바타가 실시간으로 답해드립니다</p>
+
+  <div class="chatbot-mockup reveal reveal-delay-2">
+    <div class="avatar-area">
+      <div class="avatar-circle">🎓</div>
+      <span>HeyGen 아바타 영역</span>
+    </div>
+    <div class="chat-bubble">
+      안녕하세요! 미디어커뮤니케이션 전공에 대해 궁금한 게 있으면 편하게 물어보세요 😊
+    </div>
+    <div class="quick-questions">
+      <button class="quick-q"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
+      <button class="quick-q"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
+      <button class="quick-q"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
+      <button class="quick-q"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
+      <button class="quick-q"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  차의과학대학교 미래융합대학 · 미디어커뮤니케이션학 전공<br>
+  경기도 포천시 해룡로 120<br>
+  <a href="https://comm.cha.ac.kr">comm.cha.ac.kr</a><br><br>
+  <span style="opacity:.5;">WIREFRAME v2 — 실제 콘텐츠로 교체 예정</span>
+</footer>
+
+<script>
+// ── Scroll reveal ──
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+reveals.forEach(el => revealObs.observe(el));
+
+// ── Floating chat ──
+const floatingChat = document.getElementById('floatingChat');
+const s1 = document.getElementById('s1');
+const chatS = document.getElementById('chatbot');
+const floatObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.target === s1 && !e.isIntersecting) floatingChat.classList.add('visible');
+    if (e.target === s1 && e.isIntersecting) floatingChat.classList.remove('visible');
+    if (e.target === chatS && e.isIntersecting) floatingChat.classList.remove('visible');
+  });
+}, { threshold: 0.3 });
+floatObs.observe(s1);
+floatObs.observe(chatS);
+
+// ── Nav dots ──
+const sections = document.querySelectorAll('section');
+const navDots = document.getElementById('navDots');
+sections.forEach((sec, i) => {
+  const d = document.createElement('button');
+  d.className = 'nav-dot' + (sec.hasAttribute('data-dot-dark') ? ' on-dark' : '');
+  d.onclick = () => sec.scrollIntoView({ behavior: 'smooth' });
+  navDots.appendChild(d);
+});
+const dotObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = Array.from(sections).indexOf(e.target);
+      document.querySelectorAll('.nav-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === idx);
+        const isDark = sections[idx]?.hasAttribute('data-dot-dark');
+        if (isDark) d.classList.add('on-dark');
+        else d.classList.remove('on-dark');
+      });
+    }
+  });
+}, { threshold: 0.4 });
+sections.forEach(s => dotObs.observe(s));
+
+// ── Count-up ──
+document.querySelectorAll('[data-count]').forEach(el => {
+  const cObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const t = parseInt(el.dataset.count);
+        let c = 0;
+        const step = t / 35;
+        const timer = setInterval(() => {
+          c += step;
+          if (c >= t) { c = t; clearInterval(timer); }
+          el.textContent = Math.floor(c);
+        }, 30);
+        cObs.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  cObs.observe(el);
+});
+
+// ── Testimonial carousel dots + swipe ──
+const track = document.getElementById('testimonialTrack');
+const dotsContainer = document.getElementById('carouselDots');
+const cards = track.querySelectorAll('.testimonial-card');
+let currentFilter = 'all';
+let visibleCards = [...cards];
+
+function buildDots() {
+  dotsContainer.innerHTML = '';
+  visibleCards.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => {
+      visibleCards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    };
+    dotsContainer.appendChild(dot);
+  });
+}
+
+function updateDots() {
+  const scrollLeft = track.scrollLeft;
+  const cardWidth = visibleCards[0]?.offsetWidth || 260;
+  const gap = 14;
+  const idx = Math.round(scrollLeft / (cardWidth + gap));
+  dotsContainer.querySelectorAll('.carousel-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+track.addEventListener('scroll', updateDots);
+buildDots();
+
+// ── Tab filtering ──
+document.querySelectorAll('.voice-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentFilter = tab.dataset.filter;
+    
+    cards.forEach(card => {
+      if (currentFilter === 'all' || card.dataset.type === currentFilter) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    visibleCards = [...cards].filter(c => c.style.display !== 'none');
+    buildDots();
+    track.scrollTo({ left: 0, behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
