@@ -654,17 +654,51 @@ section {
 }
 .avatar-area {
   width: 100%;
-  height: 160px;
+  height: 240px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(61,217,182,0.08), rgba(255,98,70,0.08));
-  border: 1px dashed rgba(255,255,255,0.1);
+  background: #1a1a2e;
+  border: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   gap: 6px;
+  position: relative;
+  overflow: hidden;
 }
+/* 아바타 로딩 전 플레이스홀더 */
+.avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 2;
+  background: linear-gradient(135deg, rgba(61,217,182,0.08), rgba(255,98,70,0.08));
+  transition: opacity 0.5s;
+}
+.avatar-placeholder.hidden { opacity: 0; pointer-events: none; }
+.avatar-placeholder span { font-size: 11px; color: rgba(255,255,255,0.3); }
+/* 상태 표시 */
+.avatar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transition: background 0.3s;
+}
+.avatar-status.connected .status-dot { background: var(--mint); animation: ctaPulse 2s ease-in-out infinite; }
+.avatar-status.connected .status-text { color: var(--mint); }
 .avatar-circle {
   width: 56px; height: 56px;
   border-radius: 50%;
@@ -1094,19 +1128,34 @@ section {
   <p class="subtitle reveal reveal-delay-1">AI 아바타가 실시간으로 답해드립니다</p>
 
   <div class="chatbot-mockup reveal reveal-delay-2">
-    <div class="avatar-area">
-      <div class="avatar-circle">🎓</div>
-      <span>HeyGen 아바타 영역</span>
+    <!-- HeyGen 아바타 iframe 영역 -->
+    <div class="avatar-area" id="avatarArea">
+      <iframe
+        id="heygen-avatar"
+        src="about:blank"
+        allow="camera; microphone; autoplay; clipboard-write"
+        style="width:100%; height:100%; border:none; border-radius:14px; background:#1a1a2e;"
+      ></iframe>
+      <!-- 아바타 로딩 전 플레이스홀더 (iframe src 설정 전 표시) -->
+      <div class="avatar-placeholder" id="avatarPlaceholder">
+        <div class="avatar-circle">🎓</div>
+        <span>AI 아바타 로딩 중...</span>
+      </div>
     </div>
-    <div class="chat-bubble">
+    <!-- 상태 표시 -->
+    <div class="avatar-status" id="avatarStatus">
+      <span class="status-dot"></span>
+      <span class="status-text">아바타 대기 중</span>
+    </div>
+    <div class="chat-bubble" id="chatBubble">
       안녕하세요! 미디어커뮤니케이션 전공에 대해 궁금한 게 있으면 편하게 물어보세요 😊
     </div>
     <div class="quick-questions">
-      <button class="quick-q"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
-      <button class="quick-q"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
-      <button class="quick-q"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
-      <button class="quick-q"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
-      <button class="quick-q"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
+      <button class="quick-q" data-question="졸업하면 어디에 취업할 수 있나요?"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
+      <button class="quick-q" data-question="어떤 수업을 듣게 되나요?"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
+      <button class="quick-q" data-question="다른 전공이랑 뭐가 다른가요?"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
+      <button class="quick-q" data-question="내 관심사에 맞는 진로는?"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
+      <button class="quick-q" data-question="자유롭게 질문하기"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
     </div>
   </div>
 </section>
@@ -1236,6 +1285,99 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
     track.scrollTo({ left: 0, behavior: 'smooth' });
   });
 });
+
+// ── HeyGen Avatar 연동 ──
+// ✅ TODO: 아래 URL을 실제 Netlify 배포 URL로 교체
+const AVATAR_APP_URL = 'about:blank'; // 예: 'https://micom-avatar-bot.netlify.app/'
+const avatarIframe = document.getElementById('heygen-avatar');
+const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+const avatarStatus = document.getElementById('avatarStatus');
+const chatBubble = document.getElementById('chatBubble');
+
+// 아바타 앱 로드
+function initAvatar() {
+  if (AVATAR_APP_URL === 'about:blank') {
+    console.log('⏳ 아바타 URL 미설정 - 플레이스홀더 유지');
+    return;
+  }
+  avatarIframe.src = AVATAR_APP_URL;
+  avatarIframe.onload = () => {
+    avatarPlaceholder.classList.add('hidden');
+    avatarStatus.classList.add('connected');
+    avatarStatus.querySelector('.status-text').textContent = '아바타 연결됨';
+    // 아바타 시작 신호
+    avatarIframe.contentWindow.postMessage({
+      type: 'START_AVATAR',
+      context: 'micom_landing'
+    }, '*');
+  };
+}
+
+// 빠른 질문 버튼 → 아바타에 전달
+document.querySelectorAll('.quick-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const question = btn.dataset.question;
+    if (!question) return;
+
+    // UI 피드백
+    chatBubble.textContent = '🤔 생각하는 중...';
+    btn.style.borderColor = 'var(--mint)';
+    setTimeout(() => { btn.style.borderColor = ''; }, 1000);
+
+    if (AVATAR_APP_URL === 'about:blank') {
+      // 아바타 미연결 시 - 챗봇 섹션으로 스크롤만
+      chatBubble.textContent = '아바타가 아직 연결되지 않았습니다. 곧 만나요! 😊';
+      return;
+    }
+
+    // 아바타에 질문 전달
+    avatarIframe.contentWindow.postMessage({
+      type: 'ASK_QUESTION',
+      question: question
+    }, '*');
+  });
+});
+
+// CTA 버튼 (각 섹션의 챗봇 진입점) → 챗봇 섹션으로 스크롤 + 질문 전달
+document.querySelectorAll('.cta-chat').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const chatSection = document.getElementById('chatbot');
+    chatSection.scrollIntoView({ behavior: 'smooth' });
+
+    // CTA 버튼 텍스트를 질문으로 전달
+    const question = btn.textContent.trim();
+    if (AVATAR_APP_URL !== 'about:blank' && avatarIframe.contentWindow) {
+      setTimeout(() => {
+        avatarIframe.contentWindow.postMessage({
+          type: 'ASK_QUESTION',
+          question: question
+        }, '*');
+      }, 800); // 스크롤 후 전달
+    }
+  });
+});
+
+// 아바타로부터 응답 수신
+window.addEventListener('message', (event) => {
+  const { type, text } = event.data || {};
+  
+  if (type === 'AVATAR_REPLY') {
+    chatBubble.textContent = text;
+  }
+  if (type === 'AVATAR_READY') {
+    avatarStatus.classList.add('connected');
+    avatarStatus.querySelector('.status-text').textContent = '대화 준비 완료';
+  }
+  if (type === 'AVATAR_SPEAKING') {
+    avatarStatus.querySelector('.status-text').textContent = '말하는 중...';
+  }
+  if (type === 'AVATAR_IDLE') {
+    avatarStatus.querySelector('.status-text').textContent = '대화 준비 완료';
+  }
+});
+
+// 페이지 로드 시 아바타 초기화
+initAvatar();
 </script>
 </body>
 </html>
