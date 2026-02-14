@@ -643,45 +643,6 @@ section {
   color: rgba(255,255,255,0.45);
   margin-bottom: 28px;
 }
-.chatbot-mockup {
-  background: var(--navy-light);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
-  padding: 20px 18px;
-  max-width: 340px;
-  margin: 0 auto;
-  text-align: left;
-}
-.avatar-area {
-  width: 100%;
-  height: 240px;
-  border-radius: 14px;
-  background: #1a1a2e;
-  border: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  gap: 6px;
-  position: relative;
-  overflow: hidden;
-}
-/* 아바타 로딩 전 플레이스홀더 */
-.avatar-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  z-index: 2;
-  background: linear-gradient(135deg, rgba(61,217,182,0.08), rgba(255,98,70,0.08));
-  transition: opacity 0.5s;
-}
-.avatar-placeholder.hidden { opacity: 0; pointer-events: none; }
-.avatar-placeholder span { font-size: 11px; color: rgba(255,255,255,0.3); }
 /* 상태 표시 */
 .avatar-status {
   display: flex;
@@ -699,20 +660,6 @@ section {
 }
 .avatar-status.connected .status-dot { background: var(--mint); animation: ctaPulse 2s ease-in-out infinite; }
 .avatar-status.connected .status-text { color: var(--mint); }
-.avatar-circle {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: 2px solid rgba(61,217,182,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-.avatar-area span {
-  font-size: 10px;
-  color: rgba(255,255,255,0.25);
-}
 .chat-bubble {
   background: var(--glass);
   border: 1px solid rgba(255,255,255,0.06);
@@ -756,28 +703,149 @@ section {
 }
 .footer a { color: var(--mint); text-decoration: none; }
 
-/* ── Floating chat ── */
-.floating-chat {
+/* ── Floating Avatar Widget ── */
+.avatar-widget {
   position: fixed;
-  bottom: 20px; right: 20px;
-  width: 52px; height: 52px;
+  bottom: 20px;
+  right: 20px;
+  z-index: 950;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+.avatar-widget.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Toggle button (collapsed) */
+.avatar-widget-toggle {
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--coral);
-  color: #fff;
-  border: none;
-  font-size: 22px;
+  background: var(--navy);
+  border: 2.5px solid rgba(61,217,182,0.5);
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(15,23,41,0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255,98,70,0.4);
-  z-index: 900;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all .4s ease;
+  font-size: 26px;
+  position: relative;
+  transition: all 0.3s;
+  padding: 0;
 }
-.floating-chat.visible { opacity: 1; transform: translateY(0); }
-.floating-chat:active { transform: scale(.92); }
+.avatar-widget-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 30px rgba(15,23,41,0.5);
+  border-color: var(--mint);
+}
+.avatar-widget-toggle:active { transform: scale(0.95); }
+.avatar-widget-toggle .toggle-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--navy);
+  white-space: nowrap;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.avatar-widget-toggle .notif-dot {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 14px; height: 14px;
+  background: var(--coral);
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  animation: ctaPulse 2s ease-in-out infinite;
+}
+.avatar-widget.open .avatar-widget-toggle { display: none; }
+
+/* Expanded panel */
+.avatar-widget-panel {
+  display: none;
+  width: 340px;
+  background: var(--navy-light);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 40px rgba(15,23,41,0.45);
+  overflow: hidden;
+  flex-direction: column;
+  animation: panelSlideUp 0.35s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes panelSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.avatar-widget.open .avatar-widget-panel { display: flex; }
+
+.avatar-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.avatar-widget-header .panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+}
+.avatar-widget-close {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: rgba(255,255,255,0.5);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.avatar-widget-close:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+.avatar-widget-iframe {
+  width: 100%;
+  height: 220px;
+  background: #1a1a2e;
+}
+.avatar-widget-iframe iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.avatar-widget-body {
+  padding: 14px 16px;
+  max-height: calc(80vh - 290px);
+  overflow-y: auto;
+}
+.avatar-widget-body .chat-bubble {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.avatar-widget-body .quick-questions {
+  gap: 6px;
+}
+.avatar-widget-body .quick-q {
+  padding: 9px 12px;
+  font-size: 11px;
+}
+
+/* On dark backgrounds, toggle label turns white */
+.avatar-widget.on-dark .avatar-widget-toggle .toggle-label {
+  color: rgba(255,255,255,0.6);
+}
+
+@media (max-width: 400px) {
+  .avatar-widget-panel { width: calc(100vw - 32px); right: 0; }
+}
 .notif-dot {
   position: absolute;
   top: -1px; right: -1px;
@@ -842,7 +910,6 @@ section {
   .showcase-grid { grid-template-columns: repeat(3, 1fr); }
   .showcase-item.wide { grid-column: span 1; aspect-ratio: 1; }
   .testimonial-card { min-width: 280px; max-width: 300px; }
-  .chatbot-mockup { max-width: 380px; }
 }
 </style>
 </head>
@@ -855,9 +922,44 @@ section {
 
 <nav class="nav-dots" id="navDots"></nav>
 
-<button class="floating-chat" id="floatingChat" onclick="document.getElementById('chatbot').scrollIntoView({behavior:'smooth'})">
-  💬<span class="notif-dot"></span>
-</button>
+<!-- ═══ Floating Avatar Widget ═══ -->
+<div class="avatar-widget" id="avatarWidget">
+  <button class="avatar-widget-toggle" id="avatarToggle" onclick="toggleAvatarWidget()">
+    🎓
+    <span class="notif-dot"></span>
+    <span class="toggle-label">AI 상담</span>
+  </button>
+  <div class="avatar-widget-panel" id="avatarPanel">
+    <div class="avatar-widget-header">
+      <span class="panel-title">AI 아바타 상담</span>
+      <div class="avatar-status" id="avatarStatus" style="margin-bottom:0;">
+        <span class="status-dot"></span>
+        <span class="status-text">아바타 대기 중</span>
+      </div>
+      <button class="avatar-widget-close" onclick="toggleAvatarWidget()">✕</button>
+    </div>
+    <div class="avatar-widget-iframe">
+      <iframe
+        id="heygen-avatar"
+        src="https://mediacom-avatar-bot.netlify.app/"
+        allow="camera; microphone; autoplay; clipboard-write"
+        style="background:#1a1a2e;"
+      ></iframe>
+    </div>
+    <div class="avatar-widget-body">
+      <div class="chat-bubble" id="chatBubble" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);">
+        안녕하세요! 미디어커뮤니케이션 전공에 대해 궁금한 게 있으면 편하게 물어보세요 😊
+      </div>
+      <div class="quick-questions">
+        <button class="quick-q" data-question="졸업하면 어디에 취업할 수 있나요?"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
+        <button class="quick-q" data-question="어떤 수업을 듣게 되나요?"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
+        <button class="quick-q" data-question="다른 전공이랑 뭐가 다른가요?"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
+        <button class="quick-q" data-question="내 관심사에 맞는 진로는?"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
+        <button class="quick-q" data-question="자유롭게 질문하기"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ S1: HERO ═══ -->
 <section class="hero" id="s1" data-dot-dark>
@@ -1125,38 +1227,16 @@ section {
 <section class="chatbot-section" id="chatbot" data-dot-dark>
   <div class="section-tag dark reveal">CHAT</div>
   <h2 class="reveal">궁금한 게 있다면,<br>직접 물어보세요</h2>
-  <p class="subtitle reveal reveal-delay-1">AI 아바타가 실시간으로 답해드립니다</p>
+  <p class="subtitle reveal reveal-delay-1">우측 하단 AI 아바타가 실시간으로 답해드립니다</p>
 
-  <div class="chatbot-mockup reveal reveal-delay-2">
-    <!-- HeyGen 아바타 iframe 영역 -->
-    <div class="avatar-area" id="avatarArea">
-      <iframe
-        id="heygen-avatar"
-        src="https://mediacom-avatar-bot.netlify.app/"
-        allow="camera; microphone; autoplay; clipboard-write"
-        style="width:100%; height:100%; border:none; border-radius:14px; background:#1a1a2e;"
-      ></iframe>
-      <!-- 아바타 로딩 전 플레이스홀더 (iframe src 설정 전 표시) -->
-      <div class="avatar-placeholder" id="avatarPlaceholder">
-        <div class="avatar-circle">🎓</div>
-        <span>AI 아바타 로딩 중...</span>
-      </div>
-    </div>
-    <!-- 상태 표시 -->
-    <div class="avatar-status" id="avatarStatus">
-      <span class="status-dot"></span>
-      <span class="status-text">아바타 대기 중</span>
-    </div>
-    <div class="chat-bubble" id="chatBubble">
-      안녕하세요! 미디어커뮤니케이션 전공에 대해 궁금한 게 있으면 편하게 물어보세요 😊
-    </div>
-    <div class="quick-questions">
-      <button class="quick-q" data-question="졸업하면 어디에 취업할 수 있나요?"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
-      <button class="quick-q" data-question="어떤 수업을 듣게 되나요?"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
-      <button class="quick-q" data-question="다른 전공이랑 뭐가 다른가요?"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
-      <button class="quick-q" data-question="내 관심사에 맞는 진로는?"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
-      <button class="quick-q" data-question="자유롭게 질문하기"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
-    </div>
+  <div class="reveal reveal-delay-2" style="text-align:center; margin-top:20px;">
+    <button class="cta-chat glass-bg" onclick="openAvatarWidget()" style="margin:0 auto;">
+      <span class="pulse-dot"></span>
+      AI 아바타와 대화하기
+    </button>
+    <p style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:16px; line-height:1.7;">
+      화면 우측 하단의 🎓 버튼을 눌러<br>언제든지 AI 아바타에게 질문할 수 있습니다.
+    </p>
   </div>
 </section>
 
@@ -1175,19 +1255,27 @@ const revealObs = new IntersectionObserver(entries => {
 }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 reveals.forEach(el => revealObs.observe(el));
 
-// ── Floating chat ──
-const floatingChat = document.getElementById('floatingChat');
+// ── Floating Avatar Widget ──
+const avatarWidget = document.getElementById('avatarWidget');
 const s1 = document.getElementById('s1');
-const chatS = document.getElementById('chatbot');
 const floatObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
-    if (e.target === s1 && !e.isIntersecting) floatingChat.classList.add('visible');
-    if (e.target === s1 && e.isIntersecting) floatingChat.classList.remove('visible');
-    if (e.target === chatS && e.isIntersecting) floatingChat.classList.remove('visible');
+    if (e.target === s1 && !e.isIntersecting) avatarWidget.classList.add('visible');
+    if (e.target === s1 && e.isIntersecting) {
+      avatarWidget.classList.remove('visible');
+      avatarWidget.classList.remove('open');
+    }
   });
 }, { threshold: 0.3 });
 floatObs.observe(s1);
-floatObs.observe(chatS);
+
+function toggleAvatarWidget() {
+  avatarWidget.classList.toggle('open');
+}
+function openAvatarWidget() {
+  avatarWidget.classList.add('visible');
+  avatarWidget.classList.add('open');
+}
 
 // ── Nav dots ──
 const sections = document.querySelectorAll('section');
@@ -1286,22 +1374,16 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
   });
 });
 
-// ── HeyGen Avatar 연동 ──
-const AVATAR_APP_URL = 'https://mediacom-avatar-bot.netlify.app/';
+// ── HeyGen Avatar 연동 (Floating Widget) ──
 const avatarIframe = document.getElementById('heygen-avatar');
-const avatarPlaceholder = document.getElementById('avatarPlaceholder');
 const avatarStatus = document.getElementById('avatarStatus');
 const chatBubble = document.getElementById('chatBubble');
 
-// 아바타 앱 로드
-function initAvatar() {
-  avatarIframe.src = AVATAR_APP_URL;
-  avatarIframe.onload = () => {
-    avatarPlaceholder.classList.add('hidden');
-    avatarStatus.classList.add('connected');
-    avatarStatus.querySelector('.status-text').textContent = '아바타 연결됨';
-  };
-}
+// 아바타 로드 완료 시
+avatarIframe.onload = () => {
+  avatarStatus.classList.add('connected');
+  avatarStatus.querySelector('.status-text').textContent = '아바타 연결됨';
+};
 
 // 빠른 질문 버튼 → 아바타에 전달
 document.querySelectorAll('.quick-q').forEach(btn => {
@@ -1309,12 +1391,10 @@ document.querySelectorAll('.quick-q').forEach(btn => {
     const question = btn.dataset.question;
     if (!question) return;
 
-    // UI 피드백
     chatBubble.textContent = '🤔 생각하는 중...';
     btn.style.borderColor = 'var(--mint)';
     setTimeout(() => { btn.style.borderColor = ''; }, 1000);
 
-    // 아바타에 질문 전달
     avatarIframe.contentWindow.postMessage({
       type: 'ASK_QUESTION',
       question: question
@@ -1322,13 +1402,11 @@ document.querySelectorAll('.quick-q').forEach(btn => {
   });
 });
 
-// CTA 버튼 (각 섹션의 챗봇 진입점) → 챗봇 섹션으로 스크롤 + 질문 전달
+// CTA 버튼 (각 섹션의 챗봇 진입점) → 플로팅 위젯 열기 + 질문 전달
 document.querySelectorAll('.cta-chat').forEach(btn => {
   btn.addEventListener('click', () => {
-    const chatSection = document.getElementById('chatbot');
-    chatSection.scrollIntoView({ behavior: 'smooth' });
+    openAvatarWidget();
 
-    // CTA 버튼 텍스트를 질문으로 전달
     const question = btn.textContent.trim();
     if (avatarIframe.contentWindow) {
       setTimeout(() => {
@@ -1336,7 +1414,7 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
           type: 'ASK_QUESTION',
           question: question
         }, '*');
-      }, 800); // 스크롤 후 전달
+      }, 500);
     }
   });
 });
@@ -1344,7 +1422,7 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
 // 아바타로부터 응답 수신
 window.addEventListener('message', (event) => {
   const { type, text } = event.data || {};
-  
+
   if (type === 'AVATAR_REPLY') {
     chatBubble.textContent = text;
   }
@@ -1359,9 +1437,6 @@ window.addEventListener('message', (event) => {
     avatarStatus.querySelector('.status-text').textContent = '대화 준비 완료';
   }
 });
-
-// 페이지 로드 시 아바타 초기화
-initAvatar();
 </script>
 </body>
 </html>
