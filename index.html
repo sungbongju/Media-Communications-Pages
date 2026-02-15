@@ -1275,11 +1275,25 @@ function toggleMinimizePIP() {
   }
 }
 
+const PIP_SRC = 'https://mediacom-avatar-bot.netlify.app/';
+
 function closePIP() {
+  const iframe = document.getElementById('heygen-pip');
+  // iframe에 세션 종료 알림
+  if (iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'END_SESSION' }, '*');
+  }
+  // iframe src 제거하여 세션 완전 종료
+  iframe.src = 'about:blank';
   pipContainer.classList.add('hidden');
 }
 
 function showPIP() {
+  const iframe = document.getElementById('heygen-pip');
+  // iframe이 비어있으면 새 세션으로 다시 로드
+  if (!iframe.src || iframe.src === 'about:blank') {
+    iframe.src = PIP_SRC;
+  }
   pipContainer.classList.remove('hidden');
   if (isPIPMinimized) {
     isPIPMinimized = false;
