@@ -643,51 +643,6 @@ section {
   color: rgba(255,255,255,0.45);
   margin-bottom: 28px;
 }
-/* 상태 표시 */
-.avatar-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-}
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  transition: background 0.3s;
-}
-.avatar-status.connected .status-dot { background: var(--mint); animation: ctaPulse 2s ease-in-out infinite; }
-.avatar-status.connected .status-text { color: var(--mint); }
-.chat-bubble {
-  background: var(--glass);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 14px 14px 14px 4px;
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: rgba(255,255,255,0.75);
-  margin-bottom: 14px;
-}
-.quick-questions { display: flex; flex-direction: column; gap: 7px; }
-.quick-q {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 11px 14px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.65);
-  font-family: inherit;
-  cursor: pointer;
-  transition: all .2s;
-  text-align: left;
-}
-.quick-q:active { background: var(--glass); border-color: var(--mint); color: #fff; }
-.quick-q .q-icon { font-size: 15px; flex-shrink: 0; }
 
 /* ── Footer ── */
 .footer {
@@ -703,157 +658,163 @@ section {
 }
 .footer a { color: var(--mint); text-decoration: none; }
 
-/* ── Floating Avatar Widget ── */
-.avatar-widget {
+/* ── PIP Avatar Widget ── */
+#heygen-pip-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 950;
+  z-index: 9999;
+  border-radius: 16px;
+  overflow: visible;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+}
+#heygen-pip-container.hidden {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .4s ease, transform .4s ease;
+  pointer-events: none;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.avatar-widget.visible {
-  opacity: 1;
-  transform: translateY(0);
+#heygen-pip-container.dragging {
+  transition: none;
+  user-select: none;
 }
-/* Toggle button (collapsed) */
-.avatar-widget-toggle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--navy);
-  border: 2.5px solid rgba(61,217,182,0.5);
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(15,23,41,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  position: relative;
-  transition: all 0.3s;
-  padding: 0;
-}
-.avatar-widget-toggle:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 30px rgba(15,23,41,0.5);
-  border-color: var(--mint);
-}
-.avatar-widget-toggle:active { transform: scale(0.95); }
-.avatar-widget-toggle .toggle-label {
-  position: absolute;
-  bottom: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: var(--navy);
-  white-space: nowrap;
-  font-weight: 600;
-  opacity: 0.7;
-}
-.avatar-widget-toggle .notif-dot {
-  position: absolute;
-  top: -2px; right: -2px;
-  width: 14px; height: 14px;
-  background: var(--coral);
-  border-radius: 50%;
-  border: 2.5px solid #fff;
-  animation: ctaPulse 2s ease-in-out infinite;
-}
-.avatar-widget.open .avatar-widget-toggle { display: none; }
-
-/* Expanded panel */
-.avatar-widget-panel {
-  display: none;
-  width: 340px;
-  background: var(--navy-light);
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 8px 40px rgba(15,23,41,0.45);
-  overflow: hidden;
-  flex-direction: column;
-  animation: panelSlideUp 0.35s cubic-bezier(.22,.61,.36,1);
-}
-@keyframes panelSlideUp {
-  from { opacity: 0; transform: translateY(16px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.avatar-widget.open .avatar-widget-panel { display: flex; }
-
-.avatar-widget-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.avatar-widget-header .panel-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.85);
-}
-.avatar-widget-close {
-  background: rgba(255,255,255,0.08);
+#heygen-pip {
+  width: 380px;
+  height: 214px;
   border: none;
-  color: rgba(255,255,255,0.5);
-  width: 30px;
-  height: 30px;
+  border-radius: 16px;
+  background: #1a1a2e;
+  display: block;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+/* Drag borders */
+.pip-drag-border {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+  z-index: 5;
+}
+.pip-drag-border:active { cursor: grabbing; }
+.pip-drag-border.top {
+  top: 0; left: 0; right: 0;
+  height: 25px;
+  border-radius: 16px 16px 0 0;
+}
+.pip-drag-border.left {
+  top: 25px; left: 0; bottom: 0;
+  width: 8px;
+}
+.pip-drag-border.right {
+  top: 25px; right: 0; bottom: 0;
+  width: 8px;
+}
+.pip-drag-border.bottom {
+  bottom: 0; left: 0; right: 0;
+  height: 8px;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Hover gradient overlay */
+.pip-hover-gradient {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 6;
+}
+#heygen-pip-container:hover .pip-hover-gradient { opacity: 1; }
+
+/* PIP controls (minimize / close) */
+.pip-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 10;
+}
+#heygen-pip-container:hover .pip-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pip-ctrl-btn {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  color: #fff;
   font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background 0.2s;
+  line-height: 1;
+  font-family: inherit;
 }
-.avatar-widget-close:hover {
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-}
-.avatar-widget-iframe {
-  width: 100%;
-  height: 220px;
-  background: #1a1a2e;
-}
-.avatar-widget-iframe iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-}
-.avatar-widget-body {
-  padding: 14px 16px;
-  max-height: calc(80vh - 290px);
-  overflow-y: auto;
-}
-.avatar-widget-body .chat-bubble {
-  margin-bottom: 12px;
-  font-size: 13px;
-}
-.avatar-widget-body .quick-questions {
-  gap: 6px;
-}
-.avatar-widget-body .quick-q {
-  padding: 9px 12px;
-  font-size: 11px;
-}
+.pip-ctrl-btn:hover { background: rgba(255,255,255,0.35); }
+.pip-ctrl-btn.close-btn:hover { background: rgba(255,80,60,0.7); }
 
-/* On dark backgrounds, toggle label turns white */
-.avatar-widget.on-dark .avatar-widget-toggle .toggle-label {
-  color: rgba(255,255,255,0.6);
+/* Minimized state */
+#heygen-pip-container.minimized {
+  width: 120px !important;
+  height: 68px !important;
+  border-radius: 10px;
 }
+#heygen-pip-container.minimized #heygen-pip {
+  width: 120px !important;
+  height: 68px !important;
+  border-radius: 10px;
+}
+#heygen-pip-container.minimized .pip-drag-border.top { height: 15px; border-radius: 10px 10px 0 0; }
+#heygen-pip-container.minimized .pip-hover-gradient { border-radius: 10px 10px 0 0; }
 
-@media (max-width: 400px) {
-  .avatar-widget-panel { width: calc(100vw - 32px); right: 0; }
-}
-.notif-dot {
-  position: absolute;
-  top: -1px; right: -1px;
-  width: 12px; height: 12px;
-  background: var(--mint);
+/* Toggle button (appears when PIP is hidden) */
+#heygen-pip-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border: 2px solid var(--cream);
-  animation: ctaPulse 2s ease-in-out infinite;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: linear-gradient(135deg, var(--navy), var(--navy-light));
+  border: 2.5px solid rgba(61,217,182,0.5);
+  color: #fff;
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 4px 24px rgba(15,23,41,0.35);
+  transition: all 0.3s;
+}
+#heygen-pip-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 30px rgba(15,23,41,0.5);
+  border-color: var(--mint);
+}
+#heygen-pip-toggle:active { transform: scale(0.95); }
+#heygen-pip-container.hidden ~ #heygen-pip-toggle {
+  display: flex !important;
+}
+
+/* Responsive */
+@media (max-width: 440px) {
+  #heygen-pip { width: 280px; height: 158px; }
+  #heygen-pip-container.minimized #heygen-pip { width: 100px !important; height: 56px !important; }
+  #heygen-pip-container.minimized { width: 100px !important; height: 56px !important; }
 }
 
 /* ── Nav dots ── */
@@ -922,44 +883,27 @@ section {
 
 <nav class="nav-dots" id="navDots"></nav>
 
-<!-- ═══ Floating Avatar Widget ═══ -->
-<div class="avatar-widget" id="avatarWidget">
-  <button class="avatar-widget-toggle" id="avatarToggle" onclick="toggleAvatarWidget()">
-    🎓
-    <span class="notif-dot"></span>
-    <span class="toggle-label">AI 상담</span>
-  </button>
-  <div class="avatar-widget-panel" id="avatarPanel">
-    <div class="avatar-widget-header">
-      <span class="panel-title">AI 아바타 상담</span>
-      <div class="avatar-status" id="avatarStatus" style="margin-bottom:0;">
-        <span class="status-dot"></span>
-        <span class="status-text">아바타 대기 중</span>
-      </div>
-      <button class="avatar-widget-close" onclick="toggleAvatarWidget()">✕</button>
-    </div>
-    <div class="avatar-widget-iframe">
-      <iframe
-        id="heygen-avatar"
-        src="https://mediacom-avatar-bot.netlify.app/"
-        allow="camera; microphone; autoplay; clipboard-write"
-        style="background:#1a1a2e;"
-      ></iframe>
-    </div>
-    <div class="avatar-widget-body">
-      <div class="chat-bubble" id="chatBubble" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.75);">
-        안녕하세요! 미디어커뮤니케이션 전공에 대해 궁금한 게 있으면 편하게 물어보세요 😊
-      </div>
-      <div class="quick-questions">
-        <button class="quick-q" data-question="졸업하면 어디에 취업할 수 있나요?"><span class="q-icon">🎯</span> 졸업하면 어디에 취업할 수 있나요?</button>
-        <button class="quick-q" data-question="어떤 수업을 듣게 되나요?"><span class="q-icon">📚</span> 어떤 수업을 듣게 되나요?</button>
-        <button class="quick-q" data-question="다른 전공이랑 뭐가 다른가요?"><span class="q-icon">🆚</span> 다른 전공이랑 뭐가 다른가요?</button>
-        <button class="quick-q" data-question="내 관심사에 맞는 진로는?"><span class="q-icon">🔮</span> 내 관심사에 맞는 진로는?</button>
-        <button class="quick-q" data-question="자유롭게 질문하기"><span class="q-icon">💬</span> 자유롭게 질문하기</button>
-      </div>
-    </div>
+<!-- ═══ PIP Avatar Widget ═══ -->
+<div id="heygen-pip-container">
+  <iframe
+    id="heygen-pip"
+    src="https://mediacom-avatar-bot.netlify.app/"
+    allow="camera; microphone; autoplay; clipboard-write"
+  ></iframe>
+  <!-- Drag areas (borders) -->
+  <div class="pip-drag-border top"></div>
+  <div class="pip-drag-border left"></div>
+  <div class="pip-drag-border right"></div>
+  <div class="pip-drag-border bottom"></div>
+  <!-- Hover gradient -->
+  <div class="pip-hover-gradient"></div>
+  <!-- Control buttons -->
+  <div class="pip-controls">
+    <button class="pip-ctrl-btn" onclick="toggleMinimizePIP()" title="최소화/복원">&#8722;</button>
+    <button class="pip-ctrl-btn close-btn" onclick="closePIP()" title="닫기">&times;</button>
   </div>
 </div>
+<button id="heygen-pip-toggle" onclick="showPIP()">🎓</button>
 
 <!-- ═══ S1: HERO ═══ -->
 <section class="hero" id="s1" data-dot-dark>
@@ -1227,15 +1171,15 @@ section {
 <section class="chatbot-section" id="chatbot" data-dot-dark>
   <div class="section-tag dark reveal">CHAT</div>
   <h2 class="reveal">궁금한 게 있다면,<br>직접 물어보세요</h2>
-  <p class="subtitle reveal reveal-delay-1">우측 하단 AI 아바타가 실시간으로 답해드립니다</p>
+  <p class="subtitle reveal reveal-delay-1">화면 우측 하단의 AI 아바타가 실시간으로 답해드립니다</p>
 
   <div class="reveal reveal-delay-2" style="text-align:center; margin-top:20px;">
-    <button class="cta-chat glass-bg" onclick="openAvatarWidget()" style="margin:0 auto;">
+    <button class="cta-chat glass-bg" onclick="showPIP()" style="margin:0 auto;">
       <span class="pulse-dot"></span>
       AI 아바타와 대화하기
     </button>
     <p style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:16px; line-height:1.7;">
-      화면 우측 하단의 🎓 버튼을 눌러<br>언제든지 AI 아바타에게 질문할 수 있습니다.
+      화면 우측 하단에 항상 떠있는 AI 아바타에게<br>언제든지 질문할 수 있습니다.
     </p>
   </div>
 </section>
@@ -1255,26 +1199,92 @@ const revealObs = new IntersectionObserver(entries => {
 }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 reveals.forEach(el => revealObs.observe(el));
 
-// ── Floating Avatar Widget ──
-const avatarWidget = document.getElementById('avatarWidget');
-const s1 = document.getElementById('s1');
-const floatObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.target === s1 && !e.isIntersecting) avatarWidget.classList.add('visible');
-    if (e.target === s1 && e.isIntersecting) {
-      avatarWidget.classList.remove('visible');
-      avatarWidget.classList.remove('open');
-    }
-  });
-}, { threshold: 0.3 });
-floatObs.observe(s1);
+// ── PIP Avatar Widget — Drag ──
+const pipContainer = document.getElementById('heygen-pip-container');
+const dragBorders = document.querySelectorAll('.pip-drag-border');
 
-function toggleAvatarWidget() {
-  avatarWidget.classList.toggle('open');
+let isDragging = false;
+let startX, startY, startLeft, startTop;
+
+dragBorders.forEach(border => {
+  border.addEventListener('mousedown', startDrag);
+  border.addEventListener('touchstart', startDrag, { passive: false });
+});
+
+function startDrag(e) {
+  isDragging = true;
+  pipContainer.classList.add('dragging');
+  const touch = e.touches ? e.touches[0] : e;
+  startX = touch.clientX;
+  startY = touch.clientY;
+  const rect = pipContainer.getBoundingClientRect();
+  startLeft = rect.left;
+  startTop = rect.top;
+  e.preventDefault();
 }
-function openAvatarWidget() {
-  avatarWidget.classList.add('visible');
-  avatarWidget.classList.add('open');
+
+function drag(e) {
+  if (!isDragging) return;
+  const touch = e.touches ? e.touches[0] : e;
+  const deltaX = touch.clientX - startX;
+  const deltaY = touch.clientY - startY;
+  let newLeft = startLeft + deltaX;
+  let newTop = startTop + deltaY;
+  const maxLeft = window.innerWidth - pipContainer.offsetWidth;
+  const maxTop = window.innerHeight - pipContainer.offsetHeight;
+  newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+  newTop = Math.max(0, Math.min(newTop, maxTop));
+  pipContainer.style.left = newLeft + 'px';
+  pipContainer.style.top = newTop + 'px';
+  pipContainer.style.right = 'auto';
+  pipContainer.style.bottom = 'auto';
+  e.preventDefault();
+}
+
+function stopDrag() {
+  if (!isDragging) return;
+  isDragging = false;
+  pipContainer.classList.remove('dragging');
+}
+
+document.addEventListener('mousemove', drag);
+document.addEventListener('mouseup', stopDrag);
+document.addEventListener('touchmove', drag, { passive: false });
+document.addEventListener('touchend', stopDrag);
+
+// ── PIP Minimize / Close / Show ──
+let isPIPMinimized = false;
+
+function toggleMinimizePIP() {
+  const rect = pipContainer.getBoundingClientRect();
+  const miniWidth = 120;
+  const miniHeight = 68;
+
+  if (!isPIPMinimized) {
+    const rightEdge = rect.right;
+    const bottomEdge = rect.bottom;
+    pipContainer.style.left = (rightEdge - miniWidth) + 'px';
+    pipContainer.style.top = (bottomEdge - miniHeight) + 'px';
+    pipContainer.style.right = 'auto';
+    pipContainer.style.bottom = 'auto';
+    isPIPMinimized = true;
+    pipContainer.classList.add('minimized');
+  } else {
+    isPIPMinimized = false;
+    pipContainer.classList.remove('minimized');
+  }
+}
+
+function closePIP() {
+  pipContainer.classList.add('hidden');
+}
+
+function showPIP() {
+  pipContainer.classList.remove('hidden');
+  if (isPIPMinimized) {
+    isPIPMinimized = false;
+    pipContainer.classList.remove('minimized');
+  }
 }
 
 // ── Nav dots ──
@@ -1374,38 +1384,13 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
   });
 });
 
-// ── HeyGen Avatar 연동 (Floating Widget) ──
-const avatarIframe = document.getElementById('heygen-avatar');
-const avatarStatus = document.getElementById('avatarStatus');
-const chatBubble = document.getElementById('chatBubble');
+// ── HeyGen Avatar 연동 (PIP) ──
+const avatarIframe = document.getElementById('heygen-pip');
 
-// 아바타 로드 완료 시
-avatarIframe.onload = () => {
-  avatarStatus.classList.add('connected');
-  avatarStatus.querySelector('.status-text').textContent = '아바타 연결됨';
-};
-
-// 빠른 질문 버튼 → 아바타에 전달
-document.querySelectorAll('.quick-q').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const question = btn.dataset.question;
-    if (!question) return;
-
-    chatBubble.textContent = '🤔 생각하는 중...';
-    btn.style.borderColor = 'var(--mint)';
-    setTimeout(() => { btn.style.borderColor = ''; }, 1000);
-
-    avatarIframe.contentWindow.postMessage({
-      type: 'ASK_QUESTION',
-      question: question
-    }, '*');
-  });
-});
-
-// CTA 버튼 (각 섹션의 챗봇 진입점) → 플로팅 위젯 열기 + 질문 전달
+// CTA 버튼 (각 섹션의 챗봇 진입점) → PIP 표시 + 질문 전달
 document.querySelectorAll('.cta-chat').forEach(btn => {
   btn.addEventListener('click', () => {
-    openAvatarWidget();
+    showPIP();
 
     const question = btn.textContent.trim();
     if (avatarIframe.contentWindow) {
@@ -1421,20 +1406,9 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
 
 // 아바타로부터 응답 수신
 window.addEventListener('message', (event) => {
-  const { type, text } = event.data || {};
-
-  if (type === 'AVATAR_REPLY') {
-    chatBubble.textContent = text;
-  }
-  if (type === 'AVATAR_READY') {
-    avatarStatus.classList.add('connected');
-    avatarStatus.querySelector('.status-text').textContent = '대화 준비 완료';
-  }
-  if (type === 'AVATAR_SPEAKING') {
-    avatarStatus.querySelector('.status-text').textContent = '말하는 중...';
-  }
-  if (type === 'AVATAR_IDLE') {
-    avatarStatus.querySelector('.status-text').textContent = '대화 준비 완료';
+  const { type } = event.data || {};
+  if (type === 'AVATAR_READY' || type === 'AVATAR_SPEAKING' || type === 'AVATAR_IDLE') {
+    // PIP 모드에서는 아바타 상태를 iframe 내부에서 표시
   }
 });
 </script>
