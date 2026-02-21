@@ -1418,6 +1418,14 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
   });
 });
 
+// 콘솔 테스트용: ask("질문")
+window.ask = function(q) {
+  showPIP();
+  setTimeout(function() {
+    avatarIframe.contentWindow.postMessage({ type: 'ASK_QUESTION', question: q }, '*');
+  }, 500);
+};
+
 // 아바타로부터 응답 수신
 window.addEventListener('message', (event) => {
   const { type, sectionId } = event.data || {};
