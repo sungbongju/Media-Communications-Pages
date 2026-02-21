@@ -1420,9 +1420,14 @@ document.querySelectorAll('.cta-chat').forEach(btn => {
 
 // 아바타로부터 응답 수신
 window.addEventListener('message', (event) => {
-  const { type } = event.data || {};
-  if (type === 'AVATAR_READY' || type === 'AVATAR_SPEAKING' || type === 'AVATAR_IDLE') {
-    // PIP 모드에서는 아바타 상태를 iframe 내부에서 표시
+  const { type, sectionId } = event.data || {};
+
+  // 아바타 답변에 따라 해당 섹션으로 자동 스크롤
+  if (type === 'SCROLL_TO' && sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 });
 </script>
