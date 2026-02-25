@@ -1,320 +1,496 @@
 /**
  * ================================================
- * auth.js — 미디어커뮤니케이션 랜딩페이지 로그인/세션 관리
+ * auth.js - 미디어커뮤니케이션학 로그인 + 행동추적 + 분석
  * ================================================
  * 
  * 기능:
- * 1. 학번+이름 간단 로그인
- * 2. JWT 토큰 기반 세션 유지 (localStorage)
- * 3. 로그인 모달 UI 제어
- * 4. 아바타 iframe에 사용자 정보 전달 (postMessage)
- * 
- * 의존성: 없음 (Vanilla JS)
- * 삽입 위치: index.html의 </body> 직전
+ * 1. 로그인/로그아웃 (학번+이름 / 게스트)
+ * 2. 아바타 봇에 사용자 정보 + 토큰 전달
+ * 3. 섹션별 체류시간 자동 추적 (IntersectionObserver)
+ * 4. 행동 로그 배치 전송 (5개마다 or 페이지 떠날 때)
+ * 5. 전공 트랙 추천 요청
  * ================================================
  */
 
-// ============================================
-// 🔧 설정
-// ============================================
-const AUTH_CONFIG = {
-  // 학교 서버 API 주소 (치매예방게임과 동일한 PHP 방식)
-  API_BASE: 'https://aiforalab.com/mediacom-api/api.php',
-  // 토큰 저장 키
-  TOKEN_KEY: 'mediacom_token',
-  USER_KEY: 'mediacom_user',
-  SESSION_KEY: 'mediacom_session',
-  // 토큰 만료 시간 (7일)
-  TOKEN_EXPIRY_DAYS: 7,
-};
+(function () {
+  'use strict';
 
-// ============================================
-// 🔐 AuthManager 클래스
-// ============================================
-class AuthManager {
-  constructor() {
-    this.user = null;
-    this.token = null;
-    this.sessionId = this._generateSessionId();
-    this.isLoggedIn = false;
-    this.onLoginCallbacks = [];
-    this.onLogoutCallbacks = [];
-  }
+  const API_BASE = 'https://aiforalab.com/mediacom-api/api.php';
+  const TOKEN_KEY = 'mediacom_token';
+  const USER_KEY = 'mediacom_user';
 
-  // ── 초기화 ──
-  async init() {
-    // localStorage에서 기존 세션 복원
-    const savedToken = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
-    const savedUser = localStorage.getItem(AUTH_CONFIG.USER_KEY);
+  // ============================================
+  // 1. 로그인/로그아웃 관리
+  // ============================================
 
-    if (savedToken && savedUser) {
-      try {
-        this.token = savedToken;
-        this.user = JSON.parse(savedUser);
-
-        // 토큰 유효성 검증
-        const isValid = await this._verifyToken();
-        if (isValid) {
-          this.isLoggedIn = true;
-          this._onLoginSuccess();
-          console.log('🔐 세션 복원:', this.user.name);
-          return true;
-        }
-      } catch (e) {
-        console.log('🔐 세션 만료, 재로그인 필요');
-      }
-    }
-
-    // 세션 없으면 로그인 모달 표시
-    this._showLoginModal();
-    return false;
-  }
-
-  // ── 로그인 ──
-  async login(studentId, name) {
-    if (!studentId || !name) {
-      throw new Error('학번과 이름을 입력해주세요.');
-    }
-
-    // 학번 형식 검증 (숫자만, 최소 4자리)
-    if (!/^\d{4,}$/.test(studentId.trim())) {
-      throw new Error('학번은 숫자로만 입력해주세요.');
-    }
-
+  function getStoredSession() {
     try {
-      const response = await fetch(`${AUTH_CONFIG.API_BASE}?action=login`, {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+      if (token && user) return { token, user };
+    } catch (e) { }
+    return null;
+  }
+
+  function saveSession(token, user) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+
+  function clearSession() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    stopTracking();
+  }
+
+  async function login(studentId, name) {
+    try {
+      const res = await fetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student_id: studentId.trim(),
-          name: name.trim()
-        })
+        body: JSON.stringify({ action: 'login', student_id: studentId, name: name })
       });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || '로그인 실패');
+      const data = await res.json();
+      if (data.success) {
+        saveSession(data.token, data.user);
+        updateUI(data.user);
+        sendUserInfoToAvatar(data.user, data.token);
+        startTracking();
+        return { success: true, user: data.user };
       }
-
-      const data = await response.json();
-
-      // 저장
-      this.token = data.token;
-      this.user = data.user;
-      this.isLoggedIn = true;
-
-      localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, data.token);
-      localStorage.setItem(AUTH_CONFIG.USER_KEY, JSON.stringify(data.user));
-      localStorage.setItem(AUTH_CONFIG.SESSION_KEY, this.sessionId);
-
-      this._onLoginSuccess();
-      this._hideLoginModal();
-
-      console.log('🔐 로그인 성공:', this.user.name);
-      return data.user;
-
-    } catch (error) {
-      // 서버 연결 실패 시 오프라인 모드
-      if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
-        console.warn('🔐 서버 연결 불가 - 오프라인 모드');
-        return this._offlineLogin(studentId, name);
-      }
-      throw error;
+      return { success: false, error: data.error || '로그인 실패' };
+    } catch (e) {
+      return { success: false, error: '서버 연결 실패' };
     }
   }
 
-  // ── 오프라인 모드 로그인 (서버 연결 안 될 때) ──
-  _offlineLogin(studentId, name) {
-    this.user = {
-      id: null,
-      student_id: studentId.trim(),
-      name: name.trim(),
-      offline: true
-    };
-    this.isLoggedIn = true;
-
-    localStorage.setItem(AUTH_CONFIG.USER_KEY, JSON.stringify(this.user));
-    localStorage.setItem(AUTH_CONFIG.SESSION_KEY, this.sessionId);
-
-    this._onLoginSuccess();
-    this._hideLoginModal();
-
-    console.log('🔐 오프라인 로그인:', this.user.name);
-    return this.user;
+  function logout() {
+    // 떠나기 전 남은 로그 전송
+    flushLogs();
+    clearSession();
+    updateUI(null);
+    // 새로고침
+    location.reload();
   }
 
-  // ── 로그아웃 ──
-  logout() {
-    this.user = null;
-    this.token = null;
-    this.isLoggedIn = false;
+  // ============================================
+  // 2. UI 업데이트
+  // ============================================
 
-    localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
-    localStorage.removeItem(AUTH_CONFIG.USER_KEY);
-    localStorage.removeItem(AUTH_CONFIG.SESSION_KEY);
-
-    this.onLogoutCallbacks.forEach(cb => cb());
-    this._showLoginModal();
-
-    console.log('🔐 로그아웃');
-  }
-
-  // ── 토큰 검증 ──
-  async _verifyToken() {
-    try {
-      const response = await fetch(`${AUTH_CONFIG.API_BASE}?action=verify`, {
-        headers: { 'Authorization': `Bearer ${this.token}` }
-      });
-      return response.ok;
-    } catch {
-      // 서버 연결 불가 시 로컬 토큰으로 진행
-      return true;
-    }
-  }
-
-  // ── 로그인 성공 후 처리 ──
-  _onLoginSuccess() {
-    // 1) 환영 메시지 표시
-    this._updateUserUI();
-
-    // 2) 아바타 iframe에 사용자 정보 전달
-    this._notifyAvatar();
-
-    // 3) 콜백 실행
-    this.onLoginCallbacks.forEach(cb => cb(this.user));
-  }
-
-  // ── UI 업데이트 ──
-  _updateUserUI() {
-    // 환영 배지 표시
+  function updateUI(user) {
     const badge = document.getElementById('user-badge');
-    if (badge) {
-      badge.textContent = `${this.user.name}님`;
-      badge.style.display = 'inline-flex';
-    }
-
-    // 로그아웃 버튼 표시
     const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.style.display = 'inline-flex';
+    const loginTrigger = document.getElementById('login-trigger');
+
+    if (user) {
+      if (badge) {
+        badge.textContent = user.name + '님';
+        badge.style.display = 'inline-block';
+      }
+      if (logoutBtn) logoutBtn.style.display = 'inline-block';
+      if (loginTrigger) loginTrigger.style.display = 'none';
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      if (loginTrigger) loginTrigger.style.display = 'inline-block';
     }
   }
 
-  // ── 아바타에 사용자 정보 전달 ──
-  _notifyAvatar() {
-    const avatarIframe = document.getElementById('heygen-pip');
-    if (avatarIframe && avatarIframe.contentWindow) {
-      avatarIframe.contentWindow.postMessage({
-        type: 'USER_LOGIN',
-        user: {
-          name: this.user.name,
-          student_id: this.user.student_id,
-          session_id: this.sessionId
-        }
+  // ============================================
+  // 3. 아바타에 사용자 정보 + 토큰 전달
+  // ============================================
+
+  function sendUserInfoToAvatar(user, token) {
+    const iframe = document.querySelector('iframe[src*="mediacom-avatar"]') ||
+                   document.querySelector('iframe[src*="netlify"]');
+    if (iframe) {
+      iframe.contentWindow.postMessage({
+        type: 'USER_INFO',
+        user: { name: user.name, student_id: user.student_id },
+        token: token || localStorage.getItem(TOKEN_KEY)
       }, '*');
+      console.log('📤 아바타에 사용자 정보 + 토큰 전달:', user.name);
     }
   }
 
-  // ── 로그인 모달 표시 ──
-  _showLoginModal() {
-    const modal = document.getElementById('login-modal');
+  // iframe 로드 후에도 전달 (지연 로드 대응)
+  function setupIframeListener() {
+    const observer = new MutationObserver(function () {
+      const session = getStoredSession();
+      if (session) {
+        sendUserInfoToAvatar(session.user, session.token);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // iframe load 이벤트
+    document.addEventListener('load', function (e) {
+      if (e.target && e.target.tagName === 'IFRAME') {
+        const session = getStoredSession();
+        if (session) {
+          setTimeout(function () {
+            sendUserInfoToAvatar(session.user, session.token);
+          }, 1000);
+        }
+      }
+    }, true);
+  }
+
+  // ============================================
+  // 4. 섹션별 체류시간 추적 (IntersectionObserver)
+  // ============================================
+
+  var sectionTimers = {};      // { sectionId: { startTime, totalTime, isVisible } }
+  var logBuffer = [];           // 배치 전송용 버퍼
+  var trackingActive = false;
+  var intersectionObserver = null;
+
+  // 추적할 섹션 정의
+  var TRACKED_SECTIONS = [
+    'main',           // 메인 히어로
+    'about',          // 전공소개
+    'tab-media',      // 언론정보
+    'tab-ad',         // 광고PR
+    'tab-content',    // 영상콘텐츠
+    'curriculum',     // 커리큘럼
+    'career',         // 진로
+    'admission',      // 입학안내
+    'facilities',     // 시설
+    'faculty',        // 교수진
+    'news'            // 뉴스
+  ];
+
+  function startTracking() {
+    if (trackingActive) return;
+    trackingActive = true;
+
+    // IntersectionObserver로 섹션 가시성 감지
+    if ('IntersectionObserver' in window) {
+      intersectionObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          var id = entry.target.id || entry.target.dataset.section || 'unknown';
+          
+          if (entry.isIntersecting) {
+            // 섹션이 보이기 시작
+            if (!sectionTimers[id]) {
+              sectionTimers[id] = { startTime: 0, totalTime: 0, isVisible: false };
+            }
+            sectionTimers[id].startTime = Date.now();
+            sectionTimers[id].isVisible = true;
+            console.log('👁️ 섹션 진입:', id);
+          } else {
+            // 섹션이 안 보이게 됨
+            if (sectionTimers[id] && sectionTimers[id].isVisible) {
+              var elapsed = (Date.now() - sectionTimers[id].startTime) / 1000;
+              sectionTimers[id].totalTime += elapsed;
+              sectionTimers[id].isVisible = false;
+
+              // 2초 이상 체류한 경우만 로그
+              if (elapsed >= 2) {
+                addLog('section_view', id, { duration_seconds: Math.round(elapsed) });
+              }
+            }
+          }
+        });
+      }, { threshold: 0.3 }); // 30% 이상 보일 때
+
+      // 각 섹션에 observer 부착
+      TRACKED_SECTIONS.forEach(function (sectionId) {
+        var el = document.getElementById(sectionId);
+        if (el) {
+          intersectionObserver.observe(el);
+        }
+      });
+
+      // data-section 속성이 있는 요소도 추적
+      document.querySelectorAll('[data-section]').forEach(function (el) {
+        intersectionObserver.observe(el);
+      });
+    }
+
+    // 탭 클릭 추적
+    document.addEventListener('click', handleTabClick);
+
+    // 스크롤 깊이 추적 (10% 단위)
+    var maxScrollDepth = 0;
+    window.addEventListener('scroll', function () {
+      if (!trackingActive) return;
+      var scrollPercent = Math.round(
+        (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+      );
+      if (scrollPercent > maxScrollDepth && scrollPercent % 10 === 0) {
+        maxScrollDepth = scrollPercent;
+        addLog('scroll_depth', 'page', { depth_percent: scrollPercent });
+      }
+    });
+
+    console.log('📊 행동 추적 시작');
+  }
+
+  function stopTracking() {
+    trackingActive = false;
+    if (intersectionObserver) {
+      intersectionObserver.disconnect();
+      intersectionObserver = null;
+    }
+    document.removeEventListener('click', handleTabClick);
+  }
+
+  function handleTabClick(e) {
+    // 탭 버튼 클릭 감지
+    var btn = e.target.closest('[data-tab], .tab-btn, .wf-tab');
+    if (btn) {
+      var tabId = btn.dataset.tab || btn.dataset.section || btn.textContent.trim().substring(0, 20);
+      addLog('tab_click', tabId, {});
+    }
+
+    // 빠른 질문 버튼 클릭 감지
+    var qBtn = e.target.closest('.quick-question-btn, [data-question]');
+    if (qBtn) {
+      var question = qBtn.dataset.question || qBtn.textContent.trim();
+      addLog('quick_question', 'avatar', { question: question.substring(0, 100) });
+    }
+  }
+
+  // ============================================
+  // 5. 로그 버퍼 + 배치 전송
+  // ============================================
+
+  function addLog(eventType, sectionId, metadata) {
+    logBuffer.push({
+      event_type: eventType,
+      section_id: sectionId,
+      metadata: metadata,
+      timestamp: new Date().toISOString()
+    });
+
+    // 5개 모이면 전송
+    if (logBuffer.length >= 5) {
+      flushLogs();
+    }
+  }
+
+  function flushLogs() {
+    if (logBuffer.length === 0) return;
+
+    var session = getStoredSession();
+    if (!session) return;
+
+    var logsToSend = logBuffer.slice();
+    logBuffer = [];
+
+    // sendBeacon 사용 (페이지 떠날 때도 전송 보장)
+    var payload = JSON.stringify({
+      action: 'log_batch',
+      token: session.token,
+      events: logsToSend
+    });
+
+    if (navigator.sendBeacon) {
+      var blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon(API_BASE, blob);
+      console.log('📤 로그 배치 전송 (beacon):', logsToSend.length + '건');
+    } else {
+      fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      }).catch(function () { });
+      console.log('📤 로그 배치 전송 (fetch):', logsToSend.length + '건');
+    }
+  }
+
+  // 페이지 떠날 때 남은 로그 + 체류시간 전송
+  window.addEventListener('beforeunload', function () {
+    // 현재 보이는 섹션의 체류시간 마감
+    Object.keys(sectionTimers).forEach(function (id) {
+      if (sectionTimers[id].isVisible) {
+        var elapsed = (Date.now() - sectionTimers[id].startTime) / 1000;
+        if (elapsed >= 2) {
+          addLog('section_view', id, { duration_seconds: Math.round(elapsed) });
+        }
+      }
+    });
+
+    // 총 페이지 체류시간
+    if (window.__pageLoadTime) {
+      var totalTime = Math.round((Date.now() - window.__pageLoadTime) / 1000);
+      addLog('page_total', 'page', { total_seconds: totalTime });
+    }
+
+    flushLogs();
+  });
+
+  window.__pageLoadTime = Date.now();
+
+  // ============================================
+  // 6. 추천 요청
+  // ============================================
+
+  async function getRecommendations() {
+    var session = getStoredSession();
+    if (!session) return null;
+
+    try {
+      var res = await fetch(API_BASE + '?action=get_recommendations&token=' + session.token);
+      var data = await res.json();
+      return data.success ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function getPrediction() {
+    var session = getStoredSession();
+    if (!session) return null;
+
+    try {
+      var res = await fetch(API_BASE + '?action=get_predict&token=' + session.token);
+      var data = await res.json();
+      return data.success ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ============================================
+  // 7. 로그인 모달 핸들러
+  // ============================================
+
+  function setupLoginModal() {
+    var modal = document.getElementById('login-modal');
+    var loginTrigger = document.getElementById('login-trigger');
+    var closeBtn = document.getElementById('login-close');
+    var loginBtn = document.getElementById('login-submit');
+    var guestBtn = document.getElementById('guest-btn');
+    var logoutBtn = document.getElementById('logout-btn');
+
+    if (loginTrigger) {
+      loginTrigger.addEventListener('click', function () {
+        if (modal) modal.style.display = 'flex';
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        if (modal) modal.style.display = 'none';
+      });
+    }
+
     if (modal) {
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) modal.style.display = 'none';
+      });
     }
-  }
 
-  // ── 로그인 모달 숨기기 ──
-  _hideLoginModal() {
-    const modal = document.getElementById('login-modal');
-    if (modal) {
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
+    if (loginBtn) {
+      loginBtn.addEventListener('click', async function () {
+        var studentId = document.getElementById('student-id').value.trim();
+        var studentName = document.getElementById('student-name').value.trim();
+
+        if (!studentId || !studentName) {
+          alert('학번과 이름을 모두 입력해주세요.');
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = '로그인 중...';
+
+        var result = await login(studentId, studentName);
+
+        if (result.success) {
+          if (modal) modal.style.display = 'none';
+          // 환영 메시지
+          console.log('✅ 로그인 성공:', result.user.name);
+        } else {
+          alert(result.error);
+        }
+
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+      });
     }
-  }
 
-  // ── 세션 ID 생성 ──
-  _generateSessionId() {
-    return 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
-  }
+    if (guestBtn) {
+      guestBtn.addEventListener('click', function () {
+        if (modal) modal.style.display = 'none';
+        console.log('👤 게스트 입장');
+      });
+    }
 
-  // ── 이벤트 등록 ──
-  onLogin(callback) { this.onLoginCallbacks.push(callback); }
-  onLogout(callback) { this.onLogoutCallbacks.push(callback); }
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logout);
+    }
 
-  // ── Getter ──
-  getUser() { return this.user; }
-  getToken() { return this.token; }
-  getSessionId() { return this.sessionId; }
-  getAuthHeaders() {
-    return this.token
-      ? { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'application/json' }
-      : { 'Content-Type': 'application/json' };
-  }
-}
-
-// ============================================
-// 🌐 전역 인스턴스
-// ============================================
-const authManager = new AuthManager();
-
-// ============================================
-// 🎬 로그인 모달 이벤트 바인딩
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-  // 로그인 폼 제출
-  const loginForm = document.getElementById('login-form');
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const studentId = document.getElementById('login-student-id').value;
-      const name = document.getElementById('login-name').value;
-      const errorEl = document.getElementById('login-error');
-      const submitBtn = loginForm.querySelector('button[type="submit"]');
-
-      // 로딩 상태
-      submitBtn.disabled = true;
-      submitBtn.textContent = '로그인 중...';
-      errorEl.textContent = '';
-      errorEl.style.display = 'none';
-
-      try {
-        await authManager.login(studentId, name);
-      } catch (error) {
-        errorEl.textContent = error.message;
-        errorEl.style.display = 'block';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '시작하기';
+    // Enter 키 지원
+    ['student-id', 'student-name'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter' && loginBtn) loginBtn.click();
+        });
       }
     });
   }
 
-  // 게스트 입장 버튼
-  const guestBtn = document.getElementById('login-guest-btn');
-  if (guestBtn) {
-    guestBtn.addEventListener('click', () => {
-      authManager._hideLoginModal();
-    });
+  // ============================================
+  // 8. 초기화
+  // ============================================
+
+  function init() {
+    setupLoginModal();
+    setupIframeListener();
+
+    // 기존 세션 복원
+    var session = getStoredSession();
+    if (session) {
+      // 토큰 유효성 검증
+      fetch(API_BASE + '?action=verify&token=' + session.token)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.valid) {
+            updateUI(session.user);
+            startTracking();
+            // 아바타에 정보 전달 (약간의 딜레이)
+            setTimeout(function () {
+              sendUserInfoToAvatar(session.user, session.token);
+            }, 2000);
+          } else {
+            clearSession();
+            updateUI(null);
+          }
+        })
+        .catch(function () {
+          // 오프라인이면 일단 세션 유지
+          updateUI(session.user);
+        });
+    } else {
+      updateUI(null);
+      // 3초 후 로그인 모달 표시
+      setTimeout(function () {
+        var modal = document.getElementById('login-modal');
+        if (modal && !getStoredSession()) {
+          modal.style.display = 'flex';
+        }
+      }, 3000);
+    }
   }
 
-  // 로그아웃 버튼
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      authManager.logout();
-    });
+  // DOM 준비되면 초기화
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 
-  // 학번 입력 필드 — 숫자만 허용
-  const studentIdInput = document.getElementById('login-student-id');
-  if (studentIdInput) {
-    studentIdInput.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/[^0-9]/g, '');
-    });
-  }
+  // 전역 API 노출 (디버깅 + 아바타 봇 연동용)
+  window.MediaComAuth = {
+    login: login,
+    logout: logout,
+    getSession: getStoredSession,
+    getRecommendations: getRecommendations,
+    getPrediction: getPrediction,
+    flushLogs: flushLogs
+  };
 
-  // 초기화
-  authManager.init();
-});
+})();
