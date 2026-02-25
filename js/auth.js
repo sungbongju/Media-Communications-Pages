@@ -359,61 +359,47 @@
 
   function setupLoginModal() {
     var modal = document.getElementById('login-modal');
-    var loginTrigger = document.getElementById('login-trigger');
-    var closeBtn = document.getElementById('login-close');
-    var loginBtn = document.getElementById('login-submit');
-    var guestBtn = document.getElementById('guest-btn');
+    var loginForm = document.getElementById('login-form');
+    var loginBtn = document.querySelector('.login-submit');
+    var guestBtn = document.getElementById('login-guest-btn');
     var logoutBtn = document.getElementById('logout-btn');
 
-    if (loginTrigger) {
-      loginTrigger.addEventListener('click', function () {
-        if (modal) modal.style.display = 'flex';
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function () {
-        if (modal) modal.style.display = 'none';
-      });
-    }
-
-    if (modal) {
-      modal.addEventListener('click', function (e) {
-        if (e.target === modal) modal.style.display = 'none';
-      });
-    }
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', async function () {
-        var studentId = document.getElementById('student-id').value.trim();
-        var studentName = document.getElementById('student-name').value.trim();
+    // Form submit 핸들러 (기존 index.html이 form 방식)
+    if (loginForm) {
+      loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var studentId = document.getElementById('login-student-id').value.trim();
+        var studentName = document.getElementById('login-name').value.trim();
 
         if (!studentId || !studentName) {
           alert('학번과 이름을 모두 입력해주세요.');
           return;
         }
 
-        loginBtn.disabled = true;
-        loginBtn.textContent = '로그인 중...';
+        if (loginBtn) {
+          loginBtn.disabled = true;
+          loginBtn.textContent = '로그인 중...';
+        }
 
         var result = await login(studentId, studentName);
 
         if (result.success) {
-          if (modal) modal.style.display = 'none';
-          // 환영 메시지
+          if (modal) modal.classList.remove('active');
           console.log('✅ 로그인 성공:', result.user.name);
         } else {
           alert(result.error);
         }
 
-        loginBtn.disabled = false;
-        loginBtn.textContent = '로그인';
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = '시작하기';
+        }
       });
     }
 
     if (guestBtn) {
       guestBtn.addEventListener('click', function () {
-        if (modal) modal.style.display = 'none';
+        if (modal) modal.classList.remove('active');
         console.log('👤 게스트 입장');
       });
     }
@@ -423,7 +409,7 @@
     }
 
     // Enter 키 지원
-    ['student-id', 'student-name'].forEach(function (id) {
+    ['login-student-id', 'login-name'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) {
         el.addEventListener('keypress', function (e) {
@@ -458,6 +444,12 @@
           } else {
             clearSession();
             updateUI(null);
+            // 토큰 만료 → 로그인 모달 표시
+            console.log('🔐 세션 만료, 재로그인 필요');
+            setTimeout(function () {
+              var modal = document.getElementById('login-modal');
+              if (modal) modal.classList.add('active');
+            }, 1000);
           }
         })
         .catch(function () {
@@ -470,7 +462,7 @@
       setTimeout(function () {
         var modal = document.getElementById('login-modal');
         if (modal && !getStoredSession()) {
-          modal.style.display = 'flex';
+          modal.classList.add('active');
         }
       }, 3000);
     }
