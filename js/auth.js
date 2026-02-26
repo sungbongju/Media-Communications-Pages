@@ -46,10 +46,14 @@
 
   async function login(studentId, name) {
     try {
+      var mbtiTf = document.getElementById('login-mbti-tf') ? document.getElementById('login-mbti-tf').value : '';
+      var body = { action: 'login', student_id: studentId, name: name };
+      if (mbtiTf) body.mbti_tf = mbtiTf;
+
       const res = await fetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', student_id: studentId, name: name })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       if (data.success) {
@@ -130,7 +134,7 @@
 
     iframe.contentWindow.postMessage({
       type: 'USER_INFO',
-      user: { name: user.name, student_id: user.student_id },
+      user: { name: user.name, student_id: user.student_id, mbti_tf: user.mbti_tf || '' },
       token: token || localStorage.getItem(TOKEN_KEY),
       // ★ 이력 정보 추가
       history: history ? {
@@ -281,6 +285,28 @@
       var question = qBtn.dataset.question || qBtn.textContent.trim();
       addLog('quick_question', 'avatar', { question: question.substring(0, 100) });
     }
+
+    // ★ CTA 버튼 클릭 감지 (챗봇 진입점)
+    var ctaBtn = e.target.closest('.cta-chat');
+    if (ctaBtn) {
+      var ctaText = ctaBtn.textContent.trim().substring(0, 50);
+      var sectionEl = ctaBtn.closest('section');
+      var sectionId = sectionEl ? (sectionEl.dataset.section || sectionEl.id) : 'unknown';
+      addLog('cta_click', sectionId, { button_text: ctaText });
+    }
+
+    // ★ voice-tab (후기 필터) 클릭 감지
+    var voiceTab = e.target.closest('.voice-tab');
+    if (voiceTab) {
+      var filter = voiceTab.dataset.filter || voiceTab.textContent.trim();
+      addLog('tab_click', 'voice-' + filter, {});
+    }
+
+    // ★ 파트너 로고 칩 클릭 감지
+    var chip = e.target.closest('.logo-chip');
+    if (chip) {
+      addLog('click', 'partner-logo', { name: chip.textContent.trim() });
+    }
   }
 
   // ============================================
@@ -401,9 +427,19 @@
         e.preventDefault();
         var studentId = document.getElementById('login-student-id').value.trim();
         var studentName = document.getElementById('login-name').value.trim();
+        var mbtiTf = document.getElementById('login-mbti-tf') ? document.getElementById('login-mbti-tf').value : '';
 
         if (!studentId || !studentName) {
           alert('학번과 이름을 모두 입력해주세요.');
+          return;
+        }
+
+        if (!mbtiTf) {
+          var loginError = document.getElementById('login-error');
+          if (loginError) {
+            loginError.textContent = 'T/F 성향을 선택해주세요';
+            loginError.style.display = 'block';
+          }
           return;
         }
 
