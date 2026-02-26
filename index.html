@@ -3,6 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script>
+// 카카오톡 인앱 브라우저 감지 → 크롬으로 리다이렉트
+(function() {
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) {
+    var currentUrl = location.href;
+    // Android: intent 스킴으로 크롬 열기
+    if (/Android/i.test(ua)) {
+      location.href = 'intent://' + currentUrl.replace(/https?:\/\//, '') +
+        '#Intent;scheme=https;package=com.android.chrome;end';
+      return;
+    }
+    // iOS: 크롬 스킴 시도, 없으면 사파리 폴백
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      location.href = 'googlechromes://' + currentUrl.replace(/https?:\/\//, '');
+      setTimeout(function() {
+        // 크롬 없으면 사파리 외부 브라우저로
+        location.href = currentUrl;
+      }, 1000);
+      return;
+    }
+  }
+})();
+</script>
 <title>미디어커뮤니케이션학 전공 — 랜딩페이지 와이어프레임 v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
