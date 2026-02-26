@@ -109,6 +109,7 @@
         user: { name: user.name, student_id: user.student_id },
         token: token || localStorage.getItem(TOKEN_KEY)
       }, '*');
+      iframe.contentWindow.postMessage({ type: 'START_AVATAR' }, '*');
       console.log('📤 아바타에 사용자 정보 + 토큰 전달:', user.name);
     }
   }
