@@ -1498,6 +1498,21 @@ window.addEventListener('message', (event) => {
     }
   }
 });
+
+// 로그인 완료 감지 → 오버레이 숨기고 아바타 로드
+window.addEventListener('storage', function() {
+  if (localStorage.getItem('mediacom_token')) {
+    var ov = document.getElementById('pip-login-overlay');
+    if (ov) ov.style.display = 'none';
+  }
+});
+setInterval(function() {
+  var ov = document.getElementById('pip-login-overlay');
+  if (ov && localStorage.getItem('mediacom_token') && ov.style.display !== 'none') {
+    ov.style.display = 'none';
+    showPIP();
+  }
+}, 500);
 </script>
 <script src="js/auth.js"></script>
 </body>
