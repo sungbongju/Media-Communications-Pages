@@ -928,7 +928,23 @@ section {
 .logout-btn:hover { border-color:var(--coral); color:var(--coral); }
 @media (max-width:400px) { .login-card { padding:32px 24px 28px; } .login-card::before { left:24px; right:24px; } }
 
+/* ═══ MBTI T/F SELECTOR ═══ */
+.mbti-tf-selector { display:flex; gap:10px; }
+.mbti-tf-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 8px; border:2px solid #e5e7eb; border-radius:14px; background:#fafbfd; cursor:pointer; transition:all 0.25s; font-family:'Noto Sans KR',sans-serif; }
+.mbti-tf-btn:hover { border-color:#c5cad3; background:#f0f2f5; }
+.mbti-tf-btn.selected { border-color:var(--mint); background:rgba(61,217,182,0.08); box-shadow:0 0 0 3px rgba(61,217,182,0.12); }
+.mbti-tf-icon { font-size:24px; }
+.mbti-tf-label { font-size:18px; font-weight:900; color:var(--navy); }
+.mbti-tf-desc { font-size:11px; color:var(--warm-gray); font-weight:400; }
+
 </style>
+<script>
+function selectMbtiTf(btn) {
+  document.querySelectorAll('.mbti-tf-btn').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  document.getElementById('login-mbti-tf').value = btn.dataset.value;
+}
+</script>
 </head>
 <body>
 
@@ -948,6 +964,22 @@ section {
       <div class="login-input-group">
         <label class="login-label" for="login-name">이름</label>
         <input type="text" id="login-name" class="login-input" placeholder="예: 홍길동" maxlength="20" required>
+      </div>
+      <div class="login-input-group">
+        <label class="login-label">나의 성향</label>
+        <div class="mbti-tf-selector">
+          <button type="button" class="mbti-tf-btn" data-value="T" onclick="selectMbtiTf(this)">
+            <span class="mbti-tf-icon">🧠</span>
+            <span class="mbti-tf-label">T</span>
+            <span class="mbti-tf-desc">논리적·분석적</span>
+          </button>
+          <button type="button" class="mbti-tf-btn" data-value="F" onclick="selectMbtiTf(this)">
+            <span class="mbti-tf-icon">💖</span>
+            <span class="mbti-tf-label">F</span>
+            <span class="mbti-tf-desc">공감적·감성적</span>
+          </button>
+        </div>
+        <input type="hidden" id="login-mbti-tf" value="">
       </div>
       <div class="login-error" id="login-error"></div>
       <button type="submit" class="login-submit">시작하기</button>
@@ -992,7 +1024,7 @@ section {
 <button id="heygen-pip-toggle" onclick="showPIP()">🎓</button>
 
 <!-- ═══ S1: HERO ═══ -->
-<section class="hero" id="s1" data-dot-dark>
+<section class="hero" id="s1" data-section="main" data-dot-dark>
   <p class="hero-eyebrow reveal">CHA UNIVERSITY</p>
   <h1 class="reveal reveal-delay-1">
     병원도, 제약회사도,<br>
@@ -1010,7 +1042,7 @@ section {
 </section>
 
 <!-- ═══ S2: WHY NOW ═══ -->
-<section class="why-now" id="s2">
+<section class="why-now" id="s2" data-section="about">
   <div class="section-tag light reveal">WHY NOW</div>
   <h2 class="reveal">지금, 달라지고 있는 것들</h2>
   <p class="subtitle reveal reveal-delay-1">숫자가 말해주는 변화</p>
@@ -1048,7 +1080,7 @@ section {
 </section>
 
 <!-- ═══ S3: IDENTITY ═══ -->
-<section class="identity" id="s3" data-dot-dark>
+<section class="identity" id="s3" data-section="identity" data-dot-dark>
   <div class="section-tag dark reveal">ONLY ONE</div>
   <h2 class="reveal">
     전국에서 <span class="accent">유일하게</span><br>
@@ -1084,7 +1116,7 @@ section {
 </section>
 
 <!-- ═══ S4: SHOWCASE ═══ -->
-<section class="showcase" id="s4">
+<section class="showcase" id="s4" data-section="showcase">
   <div class="section-tag light reveal">SHOWCASE</div>
   <h2 class="reveal">미컴이 만든 세계</h2>
   <p class="subtitle reveal reveal-delay-1">재학생들의 실제 프로젝트</p>
@@ -1120,7 +1152,7 @@ section {
 </section>
 
 <!-- ═══ S5: CURRICULUM ═══ -->
-<section class="curriculum" id="s5">
+<section class="curriculum" id="s5" data-section="curriculum">
   <div class="section-tag light reveal">ROADMAP</div>
   <h2 class="reveal">4년, 이렇게 성장합니다</h2>
   <p class="subtitle reveal reveal-delay-1">키워드로 보는 로드맵</p>
@@ -1156,7 +1188,7 @@ section {
 </section>
 
 <!-- ═══ S6: SOCIAL PROOF ═══ -->
-<section class="social-proof" id="s6">
+<section class="social-proof" id="s6" data-section="social-proof">
   <div class="section-tag light reveal">VOICES</div>
   <h2 class="reveal">우리의 이야기</h2>
   <p class="subtitle reveal reveal-delay-1">선배와 교수님들이 직접 전하는 이야기</p>
@@ -1254,7 +1286,7 @@ section {
 </section>
 
 <!-- ═══ S7: CHATBOT ═══ -->
-<section class="chatbot-section" id="chatbot" data-dot-dark>
+<section class="chatbot-section" id="chatbot" data-section="chatbot" data-dot-dark>
   <div class="section-tag dark reveal">CHAT</div>
   <h2 class="reveal">궁금한 게 있다면,<br>직접 물어보세요</h2>
   <p class="subtitle reveal reveal-delay-1">화면 우측 하단의 AI 아바타가 실시간으로 답해드립니다</p>
