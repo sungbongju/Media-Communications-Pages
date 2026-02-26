@@ -9,6 +9,7 @@
  * 3. 섹션별 체류시간 자동 추적 (IntersectionObserver)
  * 4. 행동 로그 배치 전송 (5개마다 or 페이지 떠날 때)
  * 5. 전공 트랙 추천 요청
+ * 6. ★ 개인화 인사말용 이력 조회 (user_history)
  * ================================================
  */
 
@@ -97,21 +98,50 @@
   }
 
   // ============================================
-  // 3. 아바타에 사용자 정보 + 토큰 전달
+  // 3. ★ 사용자 이력 조회 (개인화 인사말용)
   // ============================================
 
-  function sendUserInfoToAvatar(user, token) {
+  async function fetchUserHistory(userId) {
+    try {
+      const response = await fetch(
+        API_BASE + '?action=user_history&user_id=' + userId
+      );
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (data.success) return data;
+      return null;
+    } catch (e) {
+      console.error('이력 조회 실패:', e);
+      return null;
+    }
+  }
+
+  // ============================================
+  // 4. 아바타에 사용자 정보 + 토큰 + 이력 전달
+  // ============================================
+
+  async function sendUserInfoToAvatar(user, token) {
     const iframe = document.querySelector('iframe[src*="mediacom-avatar"]') ||
                    document.querySelector('iframe[src*="netlify"]');
-    if (iframe) {
-      iframe.contentWindow.postMessage({
-        type: 'USER_INFO',
-        user: { name: user.name, student_id: user.student_id },
-        token: token || localStorage.getItem(TOKEN_KEY)
-      }, '*');
-      iframe.contentWindow.postMessage({ type: 'START_AVATAR' }, '*');
-      console.log('📤 아바타에 사용자 정보 + 토큰 전달:', user.name);
-    }
+    if (!iframe) return;
+
+    // ★ 이력 조회
+    const history = await fetchUserHistory(user.id);
+
+    iframe.contentWindow.postMessage({
+      type: 'USER_INFO',
+      user: { name: user.name, student_id: user.student_id },
+      token: token || localStorage.getItem(TOKEN_KEY),
+      // ★ 이력 정보 추가
+      history: history ? {
+        visit_count: history.visit_count,
+        recent_topics: history.recent_topics,
+        interest_track: history.interest_track,
+        last_visit: history.last_visit
+      } : null
+    }, '*');
+    iframe.contentWindow.postMessage({ type: 'START_AVATAR' }, '*');
+    console.log('📤 아바타에 사용자 정보 + 이력 전달:', user.name, history);
   }
 
   // iframe 로드 후에도 전달 (지연 로드 대응)
@@ -138,7 +168,7 @@
   }
 
   // ============================================
-  // 4. 섹션별 체류시간 추적 (IntersectionObserver)
+  // 5. 섹션별 체류시간 추적 (IntersectionObserver)
   // ============================================
 
   var sectionTimers = {};      // { sectionId: { startTime, totalTime, isVisible } }
@@ -254,7 +284,7 @@
   }
 
   // ============================================
-  // 5. 로그 버퍼 + 배치 전송
+  // 6. 로그 버퍼 + 배치 전송
   // ============================================
 
   function addLog(eventType, sectionId, metadata) {
@@ -325,7 +355,7 @@
   window.__pageLoadTime = Date.now();
 
   // ============================================
-  // 6. 추천 요청
+  // 7. 추천 요청
   // ============================================
 
   async function getRecommendations() {
@@ -355,7 +385,7 @@
   }
 
   // ============================================
-  // 7. 로그인 모달 핸들러
+  // 8. 로그인 모달 핸들러
   // ============================================
 
   function setupLoginModal() {
@@ -421,7 +451,7 @@
   }
 
   // ============================================
-  // 8. 초기화
+  // 9. 초기화
   // ============================================
 
   function init() {
