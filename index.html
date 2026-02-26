@@ -949,14 +949,9 @@ section {
 <div id="heygen-pip-container">
   <iframe
     id="heygen-pip"
-    src="about:blank"
+    src="https://mediacom-avatar-bot.netlify.app/"
     allow="camera; microphone; autoplay; clipboard-write"
   ></iframe>
-  <div id="pip-login-overlay" style="position:absolute;inset:0;background:#1a1a2e;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;cursor:pointer;" onclick="document.getElementById('login-modal').classList.add('active');">
-    <div style="font-size:32px;margin-bottom:12px;">🎓</div>
-    <div style="color:#fff;font-size:13px;font-weight:600;text-align:center;line-height:1.6;">AI 상담사와 대화하려면<br>로그인을 먼저 해주세요</div>
-    <div style="margin-top:14px;padding:8px 20px;background:rgba(61,217,182,0.2);color:#3ECFB4;border-radius:20px;font-size:12px;font-weight:700;">로그인하기</div>
-  </div>
   <!-- Drag areas (borders) -->
   <div class="pip-drag-border top"></div>
   <div class="pip-drag-border left"></div>
@@ -1342,24 +1337,15 @@ function toggleMinimizePIP() {
   }
 }
 
-const PIP_SRC = 'https://mediacom-avatar-bot.netlify.app/';
-
 function closePIP() {
   const iframe = document.getElementById('heygen-pip');
   if (iframe.contentWindow) {
     iframe.contentWindow.postMessage({ type: 'END_SESSION' }, '*');
   }
-  iframe.src = 'about:blank';
   pipContainer.classList.add('hidden');
 }
 
 function showPIP() {
-  const iframe = document.getElementById('heygen-pip');
-  const overlay = document.getElementById('pip-login-overlay');
-  if (!iframe.src || iframe.src === 'about:blank') {
-    iframe.src = PIP_SRC;
-  }
-  if (overlay) overlay.style.display = 'none';
   pipContainer.classList.remove('hidden');
   if (isPIPMinimized) {
     isPIPMinimized = false;
@@ -1498,21 +1484,6 @@ window.addEventListener('message', (event) => {
     }
   }
 });
-
-// 로그인 완료 감지 → 오버레이 숨기고 아바타 로드
-window.addEventListener('storage', function() {
-  if (localStorage.getItem('mediacom_token')) {
-    var ov = document.getElementById('pip-login-overlay');
-    if (ov) ov.style.display = 'none';
-  }
-});
-setInterval(function() {
-  var ov = document.getElementById('pip-login-overlay');
-  if (ov && localStorage.getItem('mediacom_token') && ov.style.display !== 'none') {
-    ov.style.display = 'none';
-    showPIP();
-  }
-}, 500);
 </script>
 <script src="js/auth.js"></script>
 </body>
