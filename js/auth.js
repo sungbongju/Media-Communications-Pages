@@ -4,7 +4,7 @@
  * ================================================
  * 
  * 기능:
- * 1. 로그인/로그아웃 (학번+이름 / 게스트)
+ * 1. 로그인/로그아웃 (카카오 / 게스트)
  * 2. 아바타 봇에 사용자 정보 + 토큰 전달
  * 3. 섹션별 체류시간 자동 추적 (IntersectionObserver)
  * 4. 행동 로그 배치 전송 (5개마다 or 페이지 떠날 때)
@@ -16,9 +16,10 @@
 (function () {
   'use strict';
 
-  const API_BASE = 'https://aiforalab.com/mediacom-api/api.php';
-  const TOKEN_KEY = 'mediacom_token';
-  const USER_KEY = 'mediacom_user';
+  var API_BASE = 'https://aiforalab.com/mediacom-api/api.php';
+  var KAKAO_JS_KEY = 'fc0a1313d895b1956f3830e5bf14307b';
+  var TOKEN_KEY = 'mediacom_token';
+  var USER_KEY = 'mediacom_user';
 
   // ============================================
   // 1. 로그인/로그아웃 관리
@@ -26,9 +27,9 @@
 
   function getStoredSession() {
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-      if (token && user) return { token, user };
+      var token = localStorage.getItem(TOKEN_KEY);
+      var user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+      if (token && user) return { token: token, user: user };
     } catch (e) { }
     return null;
   }
@@ -44,18 +45,88 @@
     stopTracking();
   }
 
+  // ── 카카오 로그인 ──
+  function kakaoLogin() {
+    if (!window.Kakao || !Kakao.isInitialized()) {
+      alert('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+      return;
+    }
+
+    Kakao.Auth.login({
+      success: function(authObj) {
+        console.log('[Auth] Kakao login success, getting user info...');
+
+        Kakao.API.request({
+          url: '/v2/user/me',
+          success: function(res) {
+            console.log('[Auth] Kakao user info:', res);
+
+            var kakaoId = String(res.id);
+            var nickname = (res.properties && res.properties.nickname) ? res.properties.nickname : '사용자';
+            var email = (res.kakao_account && res.kakao_account.email) ? res.kakao_account.email : null;
+
+            sendKakaoLoginToServer(kakaoId, nickname, email);
+          },
+          fail: function(err) {
+            console.error('[Auth] Kakao user info error:', err);
+            alert('카카오 사용자 정보를 가져오지 못했습니다.');
+          }
+        });
+      },
+      fail: function(err) {
+        console.error('[Auth] Kakao login error:', err);
+        alert('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    });
+  }
+
+  // ── 서버에 카카오 로그인 전송 ──
+  async function sendKakaoLoginToServer(kakaoId, nickname, email) {
+    try {
+      var res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'kakao_login',
+          kakao_id: kakaoId,
+          nickname: nickname,
+          email: email
+        })
+      });
+      var data = await res.json();
+      if (data.success) {
+        saveSession(data.token, data.user);
+        updateUI(data.user);
+        sendUserInfoToAvatar(data.user, data.token);
+        startTracking();
+
+        // 로그인 모달 닫기
+        var modal = document.getElementById('login-modal');
+        if (modal) modal.classList.remove('active');
+
+        console.log('✅ 카카오 로그인 성공:', data.user.name, '(visit:', data.user.visit_count, ')');
+      } else {
+        alert('로그인 실패: ' + (data.error || '알 수 없는 오류'));
+      }
+    } catch (e) {
+      console.error('[Auth] Server error:', e);
+      alert('서버 연결 실패');
+    }
+  }
+
+  // ── 기존 학번+이름 로그인 (호환용 유지) ──
   async function login(studentId, name) {
     try {
       var mbtiTf = document.getElementById('login-mbti-tf') ? document.getElementById('login-mbti-tf').value : '';
       var body = { action: 'login', student_id: studentId, name: name };
       if (mbtiTf) body.mbti_tf = mbtiTf;
 
-      const res = await fetch(API_BASE, {
+      var res = await fetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
+      var data = await res.json();
       if (data.success) {
         saveSession(data.token, data.user);
         updateUI(data.user);
@@ -72,6 +143,16 @@
   function logout() {
     // 떠나기 전 남은 로그 전송
     flushLogs();
+
+    // 카카오 로그아웃
+    if (window.Kakao && Kakao.Auth && Kakao.Auth.getAccessToken()) {
+      try {
+        Kakao.Auth.logout(function() {
+          console.log('[Auth] Kakao logout');
+        });
+      } catch (e) {}
+    }
+
     clearSession();
     updateUI(null);
     // 새로고침
@@ -83,9 +164,9 @@
   // ============================================
 
   function updateUI(user) {
-    const badge = document.getElementById('user-badge');
-    const logoutBtn = document.getElementById('logout-btn');
-    const loginTrigger = document.getElementById('login-trigger');
+    var badge = document.getElementById('user-badge');
+    var logoutBtn = document.getElementById('logout-btn');
+    var loginTrigger = document.getElementById('login-trigger');
 
     if (user) {
       if (badge) {
@@ -107,11 +188,11 @@
 
   async function fetchUserHistory(userId) {
     try {
-      const response = await fetch(
+      var response = await fetch(
         API_BASE + '?action=user_history&user_id=' + userId
       );
       if (!response.ok) return null;
-      const data = await response.json();
+      var data = await response.json();
       if (data.success) return data;
       return null;
     } catch (e) {
@@ -125,12 +206,12 @@
   // ============================================
 
   async function sendUserInfoToAvatar(user, token) {
-    const iframe = document.querySelector('iframe[src*="mediacom-avatar"]') ||
-                   document.querySelector('iframe[src*="netlify"]');
+    var iframe = document.querySelector('iframe[src*="mediacom-avatar"]') ||
+                 document.querySelector('iframe[src*="netlify"]');
     if (!iframe) return;
 
     // ★ 이력 조회
-    const history = await fetchUserHistory(user.id);
+    var history = await fetchUserHistory(user.id);
 
     iframe.contentWindow.postMessage({
       type: 'USER_INFO',
@@ -150,8 +231,8 @@
 
   // iframe 로드 후에도 전달 (지연 로드 대응)
   function setupIframeListener() {
-    const observer = new MutationObserver(function () {
-      const session = getStoredSession();
+    var observer = new MutationObserver(function () {
+      var session = getStoredSession();
       if (session) {
         sendUserInfoToAvatar(session.user, session.token);
       }
@@ -161,7 +242,7 @@
     // iframe load 이벤트
     document.addEventListener('load', function (e) {
       if (e.target && e.target.tagName === 'IFRAME') {
-        const session = getStoredSession();
+        var session = getStoredSession();
         if (session) {
           setTimeout(function () {
             sendUserInfoToAvatar(session.user, session.token);
@@ -416,12 +497,25 @@
 
   function setupLoginModal() {
     var modal = document.getElementById('login-modal');
-    var loginForm = document.getElementById('login-form');
-    var loginBtn = document.querySelector('.login-submit');
+    var kakaoBtn = document.getElementById('kakao-login-btn');
     var guestBtn = document.getElementById('login-guest-btn');
     var logoutBtn = document.getElementById('logout-btn');
 
-    // Form submit 핸들러 (기존 index.html이 form 방식)
+    // 카카오 SDK 초기화
+    if (window.Kakao && !Kakao.isInitialized()) {
+      Kakao.init(KAKAO_JS_KEY);
+      console.log('[Auth] Kakao SDK initialized:', Kakao.isInitialized());
+    }
+
+    // 카카오 로그인 버튼
+    if (kakaoBtn) {
+      kakaoBtn.addEventListener('click', function() {
+        kakaoLogin();
+      });
+    }
+
+    // 기존 학번+이름 폼 핸들러 (호환용 — 폼이 있을 경우에만)
+    var loginForm = document.getElementById('login-form');
     if (loginForm) {
       loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -443,6 +537,7 @@
           return;
         }
 
+        var loginBtn = document.querySelector('.login-submit');
         if (loginBtn) {
           loginBtn.disabled = true;
           loginBtn.textContent = '로그인 중...';
@@ -474,16 +569,6 @@
     if (logoutBtn) {
       logoutBtn.addEventListener('click', logout);
     }
-
-    // Enter 키 지원
-    ['login-student-id', 'login-name'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('keypress', function (e) {
-          if (e.key === 'Enter' && loginBtn) loginBtn.click();
-        });
-      }
-    });
   }
 
   // ============================================
@@ -545,6 +630,7 @@
   // 전역 API 노출 (디버깅 + 아바타 봇 연동용)
   window.MediaComAuth = {
     login: login,
+    kakaoLogin: kakaoLogin,
     logout: logout,
     getSession: getStoredSession,
     getRecommendations: getRecommendations,
