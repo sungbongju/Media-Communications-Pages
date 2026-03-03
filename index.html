@@ -28,6 +28,8 @@
 })();
 </script>
 <title>미디어커뮤니케이션학 전공 — 랜딩페이지 와이어프레임 v2</title>
+<!-- 카카오 SDK -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -954,39 +956,18 @@ function selectMbtiTf(btn) {
     <div class="login-logo">
       <div class="login-logo-icon">🎓</div>
       <h3>미디어커뮤니케이션학<br>전공 탐색</h3>
-      <p>맞춤형 콘텐츠와 AI 상담을 위해<br>간단한 정보를 입력해주세요</p>
+      <p>카카오 계정으로 간편하게 로그인하고<br>맞춤형 콘텐츠와 AI 상담을 경험하세요</p>
     </div>
-    <form id="login-form" autocomplete="off">
-      <div class="login-input-group">
-        <label class="login-label" for="login-student-id">학번</label>
-        <input type="text" id="login-student-id" class="login-input" placeholder="예: 20250001" maxlength="12" inputmode="numeric" pattern="[0-9]*" required>
-      </div>
-      <div class="login-input-group">
-        <label class="login-label" for="login-name">이름</label>
-        <input type="text" id="login-name" class="login-input" placeholder="예: 홍길동" maxlength="20" required>
-      </div>
-      <div class="login-input-group">
-        <label class="login-label">나의 성향</label>
-        <div class="mbti-tf-selector">
-          <button type="button" class="mbti-tf-btn" data-value="T" onclick="selectMbtiTf(this)">
-            <span class="mbti-tf-icon">🧠</span>
-            <span class="mbti-tf-label">T</span>
-            <span class="mbti-tf-desc">논리적·분석적</span>
-          </button>
-          <button type="button" class="mbti-tf-btn" data-value="F" onclick="selectMbtiTf(this)">
-            <span class="mbti-tf-icon">💖</span>
-            <span class="mbti-tf-label">F</span>
-            <span class="mbti-tf-desc">공감적·감성적</span>
-          </button>
-        </div>
-        <input type="hidden" id="login-mbti-tf" value="">
-      </div>
-      <div class="login-error" id="login-error"></div>
-      <button type="submit" class="login-submit">시작하기</button>
-    </form>
+    
+    <!-- 카카오 로그인 버튼 -->
+    <button id="kakao-login-btn" type="button" style="display:flex; align-items:center; justify-content:center; width:100%; height:48px; background:#FEE500; border:none; border-radius:12px; cursor:pointer; font-size:15px; font-weight:700; color:#000; font-family:'Noto Sans KR',sans-serif; transition:background 0.2s,transform 0.1s; gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#000" d="M9 1C4.58 1 1 3.79 1 7.21c0 2.17 1.45 4.08 3.64 5.18-.16.57-.58 2.07-.67 2.39-.1.39.14.39.3.28.12-.08 1.93-1.31 2.71-1.84.65.09 1.32.14 2.02.14 4.42 0 8-2.79 8-6.21C17 3.79 13.42 1 9 1z"/></svg>
+      카카오 로그인
+    </button>
+    
     <div class="login-divider">또는</div>
     <button id="login-guest-btn" class="login-guest">로그인 없이 둘러보기</button>
-    <p class="login-privacy">입력하신 정보는 맞춤형 콘텐츠 추천에만 사용되며<br>다른 목적으로 활용되지 않습니다.</p>
+    <p class="login-privacy">카카오 닉네임만 수집되며, 맞춤형 콘텐츠 추천에만 사용됩니다.<br>다른 목적으로 활용되지 않습니다.</p>
   </div>
 </div>
 
